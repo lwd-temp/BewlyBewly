@@ -81,7 +81,7 @@ devDependencies:
     version: 0.54.3
   '@vitejs/plugin-vue':
     specifier: ^3.2.0
-    version: 3.2.0(vite@3.2.8)(vue@3.4.19)
+    version: 3.2.0(vite@3.2.10)(vue@3.4.19)
   '@vue/compiler-sfc':
     specifier: ^3.4.19
     version: 3.4.19
@@ -141,7 +141,7 @@ devDependencies:
     version: 4.9.5
   unocss:
     specifier: ^0.54.3
-    version: 0.54.3(postcss@8.4.33)(vite@3.2.8)
+    version: 0.54.3(postcss@8.4.33)(vite@3.2.10)
   unplugin-auto-import:
     specifier: ^0.11.5
     version: 0.11.5(@vueuse/core@10.7.2)
@@ -152,8 +152,8 @@ devDependencies:
     specifier: ^0.22.12
     version: 0.22.12(vue@3.4.19)
   vite:
-    specifier: ^3.2.8
-    version: 3.2.8(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1)
+    specifier: ^3.2.10
+    version: 3.2.10(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1)
   vitest:
     specifier: ^0.24.5
     version: 0.24.5(jsdom@20.0.3)(sass@1.71.0)(terser@5.27.1)
@@ -926,8 +926,8 @@ packages:
       vue-i18n:
         optional: true
     dependencies:
-      '@intlify/message-compiler': 9.4.1
-      '@intlify/shared': 9.4.1
+      '@intlify/message-compiler': 10.0.0-alpha.4
+      '@intlify/shared': 10.0.0-alpha.4
       jsonc-eslint-parser: 1.4.1
       source-map: 0.6.1
       vue-i18n: 9.9.1(vue@3.4.19)
@@ -941,11 +941,11 @@ packages:
       '@intlify/message-compiler': 9.9.1
       '@intlify/shared': 9.9.1
 
-  /@intlify/message-compiler@9.4.1:
-    resolution: {integrity: sha512-aN2N+dUx320108QhH51Ycd2LEpZ+NKbzyQ2kjjhqMcxhHdxtOnkgdx+MDBhOy/CObwBmhC3Nygzc6hNlfKvPNw==}
+  /@intlify/message-compiler@10.0.0-alpha.4:
+    resolution: {integrity: sha512-EqspSHIRkDDZrrnROMgrHphsbUfNUaqgf7rhwWEZr9YgsWFZADny1au/9+CH0dEwjToYfKVYQFRY3LR0P43joA==}
     engines: {node: '>= 16'}
     dependencies:
-      '@intlify/shared': 9.4.1
+      '@intlify/shared': 10.0.0-alpha.4
       source-map-js: 1.0.2
     dev: true
 
@@ -956,8 +956,8 @@ packages:
       '@intlify/shared': 9.9.1
       source-map-js: 1.0.2
 
-  /@intlify/shared@9.4.1:
-    resolution: {integrity: sha512-A51elBmZWf1FS80inf/32diO9DeXoqg9GR9aUDHFcfHoNDuT46Q+fpPOdj8jiJnSHSBh8E1E+6qWRhAZXdK3Ng==}
+  /@intlify/shared@10.0.0-alpha.4:
+    resolution: {integrity: sha512-uyHMMbDa10WXfeMIyfNBoD0slQKqq6i10z7QdjVvZWBcVPe6YMYtjDN+/c9HxuW/SOF1A0u4ETjxJnCgQ59OtQ==}
     engines: {node: '>= 16'}
     dev: true
 
@@ -981,7 +981,7 @@ packages:
         optional: true
     dependencies:
       '@intlify/bundle-utils': 4.0.0(vue-i18n@9.9.1)
-      '@intlify/shared': 9.4.1
+      '@intlify/shared': 10.0.0-alpha.4
       '@rollup/pluginutils': 4.2.1
       '@vue/compiler-sfc': 3.4.19
       debug: 4.3.4
@@ -1647,12 +1647,12 @@ packages:
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
     dev: true
 
-  /@unocss/astro@0.54.3(vite@3.2.8):
+  /@unocss/astro@0.54.3(vite@3.2.10):
     resolution: {integrity: sha512-/gmnSIIsYtAVPbcIGXuuaoCM71x8s8I0VtsEQZicNB51ux7BhSyXIQ5CE/W384NqTaqJt7gHVfbjn+io4ZSJXw==}
     dependencies:
       '@unocss/core': 0.54.3
       '@unocss/reset': 0.54.3
-      '@unocss/vite': 0.54.3(vite@3.2.8)
+      '@unocss/vite': 0.54.3(vite@3.2.10)
     transitivePeerDependencies:
       - rollup
       - vite
@@ -1816,7 +1816,7 @@ packages:
       '@unocss/core': 0.54.3
     dev: true
 
-  /@unocss/vite@0.54.3(vite@3.2.8):
+  /@unocss/vite@0.54.3(vite@3.2.10):
     resolution: {integrity: sha512-UxVo7WQpTAr5uHyjLKW1xs5kcecctUXsPApUChFxQwHRUeMT1gnBftd0r7dtSwdsdELClbIUgRVCrpFAPy2Y3g==}
     peerDependencies:
       vite: ^2.9.0 || ^3.0.0-0 || ^4.0.0
@@ -1831,19 +1831,19 @@ packages:
       chokidar: 3.6.0
       fast-glob: 3.3.2
       magic-string: 0.30.5
-      vite: 3.2.8(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1)
+      vite: 3.2.10(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1)
     transitivePeerDependencies:
       - rollup
     dev: true
 
-  /@vitejs/plugin-vue@3.2.0(vite@3.2.8)(vue@3.4.19):
+  /@vitejs/plugin-vue@3.2.0(vite@3.2.10)(vue@3.4.19):
     resolution: {integrity: sha512-E0tnaL4fr+qkdCNxJ+Xd0yM31UwMkQje76fsDVBBUCoGOUPexu2VDUYHL8P4CwV+zMvWw6nlRw19OnRKmYAJpw==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^3.0.0
       vue: ^3.2.25
     dependencies:
-      vite: 3.2.8(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1)
+      vite: 3.2.10(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1)
       vue: 3.4.19(typescript@4.9.5)
     dev: true
 
@@ -7767,7 +7767,7 @@ packages:
     engines: {node: '>= 10.0.0'}
     dev: true
 
-  /unocss@0.54.3(postcss@8.4.33)(vite@3.2.8):
+  /unocss@0.54.3(postcss@8.4.33)(vite@3.2.10):
     resolution: {integrity: sha512-uaoCKFigRkqceLmBrtWhLqQR6D6NyBAtSFVUnM1m57BSqA0EwAFmBsgoynzAmZRTQQFsPrBzKQjEmaCUTyUd9Q==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -7776,7 +7776,7 @@ packages:
       '@unocss/webpack':
         optional: true
     dependencies:
-      '@unocss/astro': 0.54.3(vite@3.2.8)
+      '@unocss/astro': 0.54.3(vite@3.2.10)
       '@unocss/cli': 0.54.3
       '@unocss/core': 0.54.3
       '@unocss/extractor-arbitrary-variants': 0.54.3
@@ -7795,7 +7795,7 @@ packages:
       '@unocss/transformer-compile-class': 0.54.3
       '@unocss/transformer-directives': 0.54.3
       '@unocss/transformer-variant-group': 0.54.3
-      '@unocss/vite': 0.54.3(vite@3.2.8)
+      '@unocss/vite': 0.54.3(vite@3.2.10)
     transitivePeerDependencies:
       - postcss
       - rollup
@@ -7967,8 +7967,8 @@ packages:
       extsprintf: 1.3.0
     dev: true
 
-  /vite@3.2.8(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1):
-    resolution: {integrity: sha512-EtQU16PLIJpAZol2cTLttNP1mX6L0SyI0pgQB1VOoWeQnMSvtiwovV3D6NcjN8CZQWWyESD2v5NGnpz5RvgOZA==}
+  /vite@3.2.10(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1):
+    resolution: {integrity: sha512-Dx3olBo/ODNiMVk/cA5Yft9Ws+snLOXrhLtrI3F4XLt4syz2Yg8fayZMWScPKoz12v5BUv7VEmQHnsfpY80fYw==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
@@ -8036,7 +8036,7 @@ packages:
       tinybench: 2.5.1
       tinypool: 0.3.1
       tinyspy: 1.1.1
-      vite: 3.2.8(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1)
+      vite: 3.2.10(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1)
     transitivePeerDependencies:
       - less
       - sass

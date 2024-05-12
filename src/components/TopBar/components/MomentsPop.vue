@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
 import { onMounted, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-// import { isNewArticle, setLastOffsetID, setLastestOffsetID } from '../notify'
-
-import type { TopBarMomentResult } from '~/models/moment/topBarMoment'
+import Empty from '~/components/Empty.vue'
+import Loading from '~/components/Loading.vue'
+import Tooltip from '~/components/Tooltip.vue'
+import { useApiClient } from '~/composables/api'
 import type { TopBarLiveMomentResult } from '~/models/moment/topBarLiveMoment'
+import type { TopBarMomentResult } from '~/models/moment/topBarMoment'
 import { getCSRF, isHomePage, smoothScrollToTop } from '~/utils/main'
-import API from '~/background/msg.define'
 
 type MomentType = 'video' | 'live' | 'article'
 interface MomentTab { type: MomentType, name: any }
@@ -23,6 +24,7 @@ interface MomentCard {
 }
 
 const { t } = useI18n()
+const api = useApiClient()
 
 const moments = reactive<MomentCard[]>([])
 const addedWatchLaterList = reactive<number[]>([])
@@ -88,6 +90,7 @@ async function initData() {
   momentOffset.value = ''
   newMomentsCount.value = 0
   livePage.value = 1
+  noMoreContent.value = false
 
   getData()
 }
@@ -103,8 +106,7 @@ function checkIfHasNewMomentsThenUpdateMoments() {
   if (selectedMomentTab.value.type === 'live')
     return
 
-  browser.runtime.sendMessage({
-    contentScriptQuery: API.MOMENT.GET_TOP_BAR_MOMENTS,
+  api.moment.getTopBarMoments({
     type: selectedMomentTab.value.type,
     update_baseline: momentUpdateBaseline.value || undefined,
   })
@@ -144,9 +146,11 @@ function checkIfHasNewMomentsThenUpdateMoments() {
 function getTopBarMoments() {
   if (isLoading.value)
     return
+  if (noMoreContent.value)
+    return
+
   isLoading.value = true
-  browser.runtime.sendMessage({
-    contentScriptQuery: API.MOMENT.GET_TOP_BAR_MOMENTS,
+  api.moment.getTopBarMoments({
     type: selectedMomentTab.value.type,
     update_baseline: momentUpdateBaseline.value || undefined,
     offset: momentOffset.value || undefined,
@@ -192,25 +196,29 @@ function isNewMoment(index: number) {
 }
 
 function getTopBarLiveMoments() {
+  if (isLoading.value)
+    return
+  if (noMoreContent.value)
+    return
+
   isLoading.value = true
-  browser.runtime
-    .sendMessage({
-      contentScriptQuery: API.MOMENT.GET_TOP_BAR_LIVE_MOMENTS,
-      page: livePage.value,
-      pagesize: 10,
-    })
+  const pageSize = 10
+  api.moment.getTopBarLiveMoments({
+    page: livePage.value,
+    pagesize: pageSize,
+  })
     .then((res: TopBarLiveMomentResult) => {
       if (res.code === 0) {
-        const { list, pagesize } = res.data
+        const { list } = res.data
 
         // if the length of this list is less then the pageSize, it means that it have no more contents
-        if (moments.length !== 0 && list.length < Number(pagesize)) {
+        if (moments.length !== 0 && list.length < pageSize) {
           noMoreContent.value = true
           return
         }
 
         // if the length of this list is equal to the pageSize, this means that it may have the next page.
-        if (list.length === Number(pagesize))
+        if (list.length === pageSize)
           livePage.value++
 
         moments.push(
@@ -224,8 +232,6 @@ function getTopBarLiveMoments() {
           }),
           ),
         )
-
-        noMoreContent.value = false
       }
     })
     .finally(() => isLoading.value = false)
@@ -235,8 +241,7 @@ function toggleWatchLater(aid: number) {
   const isInWatchLater = addedWatchLaterList.includes(aid)
 
   if (!isInWatchLater) {
-    browser.runtime.sendMessage({
-      contentScriptQuery: API.WATCHLATER.SAVE_TO_WATCHLATER,
+    api.watchlater.saveToWatchLater({
       aid,
       csrf: getCSRF(),
     })
@@ -246,8 +251,7 @@ function toggleWatchLater(aid: number) {
       })
   }
   else {
-    browser.runtime.sendMessage({
-      contentScriptQuery: API.WATCHLATER.REMOVE_FROM_WATCHLATER,
+    api.watchlater.removeFromWatchLater({
       aid,
       csrf: getCSRF(),
     })
@@ -391,7 +395,7 @@ defineExpose({
                     flex="~"
                     items="center"
                   >
-                    <fluent:live-24-filled m="r-2" />
+                    <div i-fluent:live-24-filled m="r-2" />
                     {{ $t('topbar.moments_dropdown.live_status') }}
                   </div>
                 </div>
@@ -416,10 +420,10 @@ defineExpose({
                   @click.prevent="toggleWatchLater(moment.rid || 0)"
                 >
                   <Tooltip v-if="!addedWatchLaterList.includes(moment.rid || 0)" :content="$t('common.save_to_watch_later')" placement="bottom" type="dark">
-                    <mingcute:carplay-line />
+                    <div i-mingcute:carplay-line />
                   </Tooltip>
                   <Tooltip v-else :content="$t('common.added')" placement="bottom" type="dark">
-                    <line-md:confirm />
+                    <div i-line-md:confirm />
                   </Tooltip>
                 </div>
               </div>
@@ -429,7 +433,7 @@ defineExpose({
 
         <!-- loading -->
         <Transition name="fade">
-          <loading v-if="isLoading && moments.length !== 0" m="-t-4" />
+          <Loading v-if="isLoading && moments.length !== 0" m="-t-4" />
         </Transition>
       </div>
     </main>

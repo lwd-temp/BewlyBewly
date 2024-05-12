@@ -1,8 +1,13 @@
 <script setup lang="ts">
 import type { Ref } from 'vue'
+
+import Loading from '~/components/Loading.vue'
+import VideoCard from '~/components/VideoCard/VideoCard.vue'
+import VideoCardSkeleton from '~/components/VideoCard/VideoCardSkeleton.vue'
+import { useApiClient } from '~/composables/api'
+import { useBewlyApp } from '~/composables/useAppProvider'
 import type { GridLayout } from '~/logic'
-import type { TrendingResult, List as VideoItem } from '~/models/video/trending'
-import API from '~/background/msg.define'
+import type { List as VideoItem, TrendingResult } from '~/models/video/trending'
 
 const props = defineProps<{
   gridLayout: GridLayout
@@ -20,7 +25,7 @@ const gridValue = computed((): string => {
     return '~ cols-1 xl:cols-2 gap-4'
   return '~ cols-1 gap-4'
 })
-
+const api = useApiClient()
 const videoList = reactive<VideoItem[]>([])
 const isLoading = ref<boolean>(false)
 const containerRef = ref<HTMLElement>() as Ref<HTMLElement>
@@ -66,8 +71,7 @@ async function getTrendingVideos() {
   emit('beforeLoading')
   isLoading.value = true
   try {
-    const response: TrendingResult = await browser.runtime.sendMessage({
-      contentScriptQuery: API.VIDEO.GET_POPULAR_VIDEOS,
+    const response: TrendingResult = await api.video.getPopularVideos({
       pn: pn.value++,
       ps: 30,
     })

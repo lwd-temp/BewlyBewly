@@ -25,7 +25,7 @@ function handleClose() {
         backdrop-filter: var(--bew-filter-glass-2);
       "
       pos="fixed top-1/2 left-1/2" bg="$bew-content-2 dark:$bew-elevated-1" rounded="$bew-radius"
-      transform="translate--1/2" z-2 shadow overflow="x-hidden y-overlay" w="$b-dialog-width"
+      transform="translate--1/2 translate-z-0 gpu" z-2 shadow overflow="x-hidden y-overlay" w="$b-dialog-width"
       h="$b-dialog-height" antialiased
     >
       <header
@@ -54,7 +54,7 @@ function handleClose() {
           hover:ring="2 $bew-theme-color" hover:text="$bew-theme-color" duration-300
           @click="handleClose"
         >
-          <ic-baseline-clear />
+          <div i-ic-baseline-clear />
         </div>
       </header>
       <main p="x-9 b-5" relative>

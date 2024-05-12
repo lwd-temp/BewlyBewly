@@ -1,5 +1,127 @@
 # Changelog
 
+## 0.18.5
+
+### &nbsp;&nbsp;&nbsp;Bug Fixes
+
+- Sync theme when loading page, close #736 &nbsp;-&nbsp; by **Stephen Zhou** in https://github.com/BewlyBewly/BewlyBewly/issues/736 [<samp>(6f19b)</samp>](https://github.com/BewlyBewly/BewlyBewly/commit/6f19b29)
+- Detect mouse in app bar, close #718 &nbsp;-&nbsp; by **Stephen Zhou** in https://github.com/BewlyBewly/BewlyBewly/issues/718 [<samp>(40b68)</samp>](https://github.com/BewlyBewly/BewlyBewly/commit/40b6817)
+- Attempt to fix edge extension corrupted &nbsp;-&nbsp; by **hakadao** in https://github.com/BewlyBewly/BewlyBewly/issues/705 [<samp>(70932)</samp>](https://github.com/BewlyBewly/BewlyBewly/commit/709329c)
+
+### &nbsp;&nbsp;&nbsp;Performance
+
+- Debounce `handleOsScroll` &nbsp;-&nbsp; by **hakadao** and **pengyunfei** in https://github.com/BewlyBewly/BewlyBewly/issues/735 [<samp>(a7488)</samp>](https://github.com/BewlyBewly/BewlyBewly/commit/a7488c1)
+- **Home**: Improve home page performance &nbsp;-&nbsp; by **hakadao** in https://github.com/BewlyBewly/BewlyBewly/issues/733 [<samp>(26d4c)</samp>](https://github.com/BewlyBewly/BewlyBewly/commit/26d4cb1)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/BewlyBewly/BewlyBewly/compare/v0.18.4...dev)
+
+## [0.18.4](https://github.com/BewlyBewly/BewlyBewly/compare/v0.18.2...v0.18.4) (2024-05-06)
+
+
+### Features
+
+* redesign video card ([6cd2e4e](https://github.com/BewlyBewly/BewlyBewly/commit/6cd2e4e4e5996899bb3da30cf36056ea665c756e))
+* submit store github action workflow ([#499](https://github.com/BewlyBewly/BewlyBewly/issues/499)) ([98164c3](https://github.com/BewlyBewly/BewlyBewly/commit/98164c3db196ab3a449c0c0089a91607fa95fd24))
+
+
+### Bug Fixes
+
+* basic `font-size` ([#701](https://github.com/BewlyBewly/BewlyBewly/issues/701)) ([1e6973a](https://github.com/BewlyBewly/BewlyBewly/commit/1e6973a34349c56751dd41e98e78cd6f5ff85fc0))
+* Extension-Firefox submit ([#698](https://github.com/BewlyBewly/BewlyBewly/issues/698)) ([9a15d17](https://github.com/BewlyBewly/BewlyBewly/commit/9a15d17f2d9772a1039737d2eeca265880497d9d))
+* font size doesn't match the `--bew-base-font-size` ([64a7fce](https://github.com/BewlyBewly/BewlyBewly/commit/64a7fce64b19877474c7c1312864940d4e3198a8))
+* improve dark mode ([42ed108](https://github.com/BewlyBewly/BewlyBewly/commit/42ed108ad7517346de3db1467276dc10960caf3c))
+* improve dark mode ([0eb4267](https://github.com/BewlyBewly/BewlyBewly/commit/0eb4267cf574f3f5348fe14b82305a6fc75349b3)), closes [#695](https://github.com/BewlyBewly/BewlyBewly/issues/695)
+* radio value is not updated, close [#717](https://github.com/BewlyBewly/BewlyBewly/issues/717) ([5adaf14](https://github.com/BewlyBewly/BewlyBewly/commit/5adaf14edf486c061d94e511185b8172b41d23e0))
+* **SearchBar:** cannot show the focused character ([7eb86ed](https://github.com/BewlyBewly/BewlyBewly/commit/7eb86ed13da42789b4adb9123a857270a2ca3a3c))
+* **VideoCard:** cannot open full-screen preview ([bfc5e51](https://github.com/BewlyBewly/BewlyBewly/commit/bfc5e51f38fd02b54194031bf3696e0360ed955b))
+* **VideoCard:** preview control cannot be dragged while pressing ([#714](https://github.com/BewlyBewly/BewlyBewly/issues/714)) ([e37caa7](https://github.com/BewlyBewly/BewlyBewly/commit/e37caa7f7910906fd71691455a73ffe20cd723b5))
+
+
+### Docs
+
+* adjust docs formatting ([b0e31d0](https://github.com/BewlyBewly/BewlyBewly/commit/b0e31d00ac0d335f54b555ed508f3afe75b2b5b6))
+
+
+### Style Changes
+
+* **TopBar:** adjust styles ([9e13f02](https://github.com/BewlyBewly/BewlyBewly/commit/9e13f02751ecc0a81aea3ecbde21133dae2759bd))
+* **VideoCard:** adjust styles ([77b5e90](https://github.com/BewlyBewly/BewlyBewly/commit/77b5e90799cc453e6a3d4afc0fbfa039dd5c59da))
+
+
+### CI
+
+* add build step before type check ([9aa95b9](https://github.com/BewlyBewly/BewlyBewly/commit/9aa95b915ce0462e1b46ddd199d2bf72dbed44a2))
+* remove the `\` ([f3de2c5](https://github.com/BewlyBewly/BewlyBewly/commit/f3de2c5b1f8e9762d546580ad3c4699ce4fadfd6))
+* update release workflow to include firefox sources zip ([c3d2bda](https://github.com/BewlyBewly/BewlyBewly/commit/c3d2bda27a436280dec2ee2b7cc980ddb3de9681))
+
+## [0.18.2](https://github.com/BewlyBewly/BewlyBewly/compare/v0.18.1...v0.18.2) (2024-04-28)
+
+
+### Bug Fixes
+
+* can't get local image background for home search view ([6d6d7c7](https://github.com/BewlyBewly/BewlyBewly/commit/6d6d7c7a3fd2543ddb186a88b870afd3b3b80eca)), closes [#687](https://github.com/BewlyBewly/BewlyBewly/issues/687)
+* firefox rule ([#690](https://github.com/BewlyBewly/BewlyBewly/issues/690)) ([beff7d0](https://github.com/BewlyBewly/BewlyBewly/commit/beff7d04ee2a223c65919e1e038a721e0ce62957))
+* firefox rule ([#691](https://github.com/BewlyBewly/BewlyBewly/issues/691)) ([e13af11](https://github.com/BewlyBewly/BewlyBewly/commit/e13af11121dcc786b73f46487db63c7392e27d45))
+* frosted glass effect not working in firefox ([2c4e44f](https://github.com/BewlyBewly/BewlyBewly/commit/2c4e44f21328e5a896c496c8c23664865443ad92))
+
+
+### Style Changes
+
+* **userSpacePage:** adapt unadapted sections ([df429ba](https://github.com/BewlyBewly/BewlyBewly/commit/df429bad8561afb0bafb065849c4af307e1cceb4))
+
+## [0.18.1](https://github.com/BewlyBewly/BewlyBewly/compare/v0.18.0...v0.18.1) (2024-04-27)
+
+
+### Features
+
+* local wallpapers ([#668](https://github.com/BewlyBewly/BewlyBewly/issues/668)) ([5672d9d](https://github.com/BewlyBewly/BewlyBewly/commit/5672d9dd156d94f61969c88b29bcb2bd01a3ac15))
+* **UserPanel:** Add "My workshop" link to UserPanelPop.vue ([#680](https://github.com/BewlyBewly/BewlyBewly/issues/680)) ([825794f](https://github.com/BewlyBewly/BewlyBewly/commit/825794fb2619194669c67cb1eb2a2b3eb7a34df7))
+* **VideoCard:** add tick icon for followed uploader ([#672](https://github.com/BewlyBewly/BewlyBewly/issues/672)) ([39d6d9a](https://github.com/BewlyBewly/BewlyBewly/commit/39d6d9a91dcf32a220fd15121993d170ed84cf6f))
+
+
+### Bug Fixes
+
+* **Anime:** fix cannot show the anime watch list ([02c3673](https://github.com/BewlyBewly/BewlyBewly/commit/02c36735713550e9dcc724845125848266d6f6c8))
+* can not load watch later list ([ff8056e](https://github.com/BewlyBewly/BewlyBewly/commit/ff8056e01c83fc4890c794f4b45576add6ef10c2))
+* **MomentsPop:** resolve [#649](https://github.com/BewlyBewly/BewlyBewly/issues/649) ([24310d3](https://github.com/BewlyBewly/BewlyBewly/commit/24310d382f92484435bd001b4f8d784a5e92ef49))
+* selection background and color don't change on certain pages ([8fe0f06](https://github.com/BewlyBewly/BewlyBewly/commit/8fe0f062866aa77e6e5d7de5cee53bc0bfbfbef1))
+* **TopBar:** hide more icon in top bar when not needed ([dbdb721](https://github.com/BewlyBewly/BewlyBewly/commit/dbdb72149b632fe6ccd87eba7e8cae954df6575a))
+* unadapted content on video page ([#663](https://github.com/BewlyBewly/BewlyBewly/issues/663)) ([3a4d431](https://github.com/BewlyBewly/BewlyBewly/commit/3a4d431f8abe0bc508fd94be85d4c6514d9095ae))
+* **userSpacePage:** adapt unadapted content ([185fd61](https://github.com/BewlyBewly/BewlyBewly/commit/185fd61572035323527efac49e1916fcdbda619f))
+* **VideoCard:** adjust usage between v-if and v-show ([a4e96c8](https://github.com/BewlyBewly/BewlyBewly/commit/a4e96c825f1a2e33feb68a32cb506d0009ff2ea4))
+* **VideoCard:** resolve checked animation not working ([dd15200](https://github.com/BewlyBewly/BewlyBewly/commit/dd15200f4f2c497ed277ec08a462a732e2d8cd14))
+
+
+### Docs
+
+* **README:** remove the donate section ([339219a](https://github.com/BewlyBewly/BewlyBewly/commit/339219ad4a6fc82bf5988f636539c8d41747b7d3))
+
+## [0.18.0](https://github.com/BewlyBewly/BewlyBewly/compare/v0.17.0...v0.18.0) (2024-04-24)
+
+
+### Features
+
+* redesign video card ([9e277cf](https://github.com/BewlyBewly/BewlyBewly/commit/9e277cf468eb4749a13ec76068152dda2a6e066b))
+* show video type ([#645](https://github.com/BewlyBewly/BewlyBewly/issues/645)) ([022482e](https://github.com/BewlyBewly/BewlyBewly/commit/022482e82785fac340a7f3833f6a8c7f36176c1c))
+* **VideoCard:** adjust video card style ([12eaabb](https://github.com/BewlyBewly/BewlyBewly/commit/12eaabb14ed6405d28d918beee0c4608c1510580))
+
+
+### Bug Fixes
+
+* adjust `setHistoryPauseStatus` api name ([#654](https://github.com/BewlyBewly/BewlyBewly/issues/654)) ([5f455ca](https://github.com/BewlyBewly/BewlyBewly/commit/5f455cae95761bf54176e0c96d4b438ffbf25ace))
+* adjust rule for `t.bilibili.com` page ([#653](https://github.com/BewlyBewly/BewlyBewly/issues/653)) ([3ad5f73](https://github.com/BewlyBewly/BewlyBewly/commit/3ad5f735994ae16666ff232c4ac0e680e5440bc8)), closes [#644](https://github.com/BewlyBewly/BewlyBewly/issues/644)
+* horizontal scrolling invalid when reload component ([#642](https://github.com/BewlyBewly/BewlyBewly/issues/642)) ([fffcf3a](https://github.com/BewlyBewly/BewlyBewly/commit/fffcf3a9122ea3e3fc56b21e19abae79a93e8d97))
+
+
+### Docs
+
+* update description for about branches ([8925a8d](https://github.com/BewlyBewly/BewlyBewly/commit/8925a8d6271cc37cf03bc3eaab07265434aa7597))
+
+
+### CI
+
+* use lts ([#646](https://github.com/BewlyBewly/BewlyBewly/issues/646)) ([c145ec1](https://github.com/BewlyBewly/BewlyBewly/commit/c145ec10ace750b4c9d5eb3eb3619b9fbe79e86a))
+
 ## [0.17.0](https://github.com/hakadao/BewlyBewly/compare/v0.16.7...v0.17.0) (2024-04-22)
 
 

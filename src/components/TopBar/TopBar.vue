@@ -1,17 +1,27 @@
 <script setup lang="ts">
+import { useMouseInElement } from '@vueuse/core'
 import type { Ref, UnwrapNestedRefs } from 'vue'
 import { onMounted, watch } from 'vue'
-import type { UnReadDm, UnReadMessage, UserInfo } from './types'
-import { updateInterval } from './notify'
 
-// import NotificationsPop from './components/NotificationsPop.vue'
-// import MomentsPop from './components/MomentsPop.vue'
-// import FavoritesPop from './components/FavoritesPop.vue'
-// import HistoryPop from './components/HistoryPop.vue'
-import { getUserID, isHomePage } from '~/utils/main'
+import { useApiClient } from '~/composables/api'
+import { useBewlyApp } from '~/composables/useAppProvider'
+import { useDelayedHover } from '~/composables/useDelayedHover'
 import { settings } from '~/logic'
+import { getUserID, isHomePage } from '~/utils/main'
 import emitter from '~/utils/mitt'
-import API from '~/background/msg.define'
+
+import SearchBar from '../SearchBar/SearchBar.vue'
+import ChannelsPop from './components/ChannelsPop.vue'
+import FavoritesPop from './components/FavoritesPop.vue'
+import HistoryPop from './components/HistoryPop.vue'
+import MomentsPop from './components/MomentsPop.vue'
+import MorePop from './components/MorePop.vue'
+import NotificationsPop from './components/NotificationsPop.vue'
+import UploadPop from './components/UploadPop.vue'
+import UserPanelPop from './components/UserPanelPop.vue'
+import WatchLaterPop from './components/WatchLaterPop.vue'
+import { updateInterval } from './notify'
+import type { UnReadDm, UnReadMessage, UserInfo } from './types'
 
 // import { useTopBarStore } from '~/stores/topBarStore'
 
@@ -40,7 +50,8 @@ const mid = getUserID() || ''
 const userInfo = reactive<UserInfo | NonNullable<unknown>>({}) as UnwrapNestedRefs<UserInfo>
 
 const hideTopBar = ref<boolean>(false)
-const hoveringTopBar = ref<boolean>(false)
+const headerTarget = ref(null)
+const { isOutside: isOutsideTopBar } = useMouseInElement(headerTarget)
 
 // const showChannelsPop = ref<boolean>(false)
 // const showUserPanelPop = ref<boolean>(false)
@@ -63,7 +74,7 @@ const popupVisible = reactive({
   upload: false,
   more: false,
 })
-
+const api = useApiClient()
 const isLogin = ref<boolean>(false)
 const unReadMessage = reactive<UnReadMessage | NonNullable<unknown>>(
   {},
@@ -268,7 +279,7 @@ function handleScroll() {
   if (scrollTop.value === 0)
     toggleTopBarVisible(true)
 
-  if (settings.value.autoHideTopBar && !hoveringTopBar.value && scrollTop.value !== 0) {
+  if (settings.value.autoHideTopBar && isOutsideTopBar && scrollTop.value !== 0) {
     if (scrollTop.value > oldScrollTop.value)
       toggleTopBarVisible(false)
 
@@ -281,10 +292,7 @@ function handleScroll() {
 
 async function getUserInfo() {
   try {
-    const res = await browser.runtime
-      .sendMessage({
-        contentScriptQuery: API.USER.GET_USER_INFO,
-      })
+    const res = await api.user.getUserInfo()
 
     if (res.code === 0) {
       isLogin.value = true
@@ -309,9 +317,7 @@ async function getUnreadMessageCount() {
 
   try {
     let res
-    res = await browser.runtime.sendMessage({
-      contentScriptQuery: 'getUnreadMsg',
-    })
+    res = await useApiClient().notification.getUnreadMsg()
     if (res.code === 0) {
       Object.assign(unReadMessage, res.data)
       Object.entries(unReadMessage).forEach(([key, value]) => {
@@ -322,9 +328,7 @@ async function getUnreadMessageCount() {
       })
     }
 
-    res = await browser.runtime.sendMessage({
-      contentScriptQuery: 'getUnreadDm',
-    })
+    res = await useApiClient().notification.getUnreadDm()
     if (res.code === 0) {
       Object.assign(unReadDm, res.data)
       if (typeof unReadDm.follow_unread === 'number')
@@ -346,9 +350,7 @@ async function getTopBarNewMomentsCount() {
   let result = 0
 
   try {
-    const res = await browser.runtime.sendMessage({
-      contentScriptQuery: 'getTopBarNewMomentsCount',
-    })
+    const res = await useApiClient().moment.getTopBarNewMomentsCount()
     if (res.code === 0) {
       if (typeof res.data.update_info.item.count === 'number')
         result = res.data.update_info.item.count
@@ -372,10 +374,9 @@ defineExpose({
 
 <template>
   <header
+    ref="headerTarget"
     w="full" transition="all 300 ease-in-out"
     :class="{ hide: hideTopBar }"
-    @mouseenter="hoveringTopBar = true"
-    @mouseleave="hoveringTopBar = false"
   >
     <main
       max-w="$bew-page-max-width" m-auto flex="~ justify-between items-center gap-4"
@@ -389,7 +390,7 @@ defineExpose({
           backdrop-filter:var(--bew-filter-glass-1)
         "
         pos="absolute top-0 left-0" w-full h-80px
-        pointer-events-none
+        pointer-events-none transform-gpu
       />
       <Transition name="fade">
         <div
@@ -397,9 +398,13 @@ defineExpose({
           pos="absolute top-0 left-0" w-full h-80px
           pointer-events-none opacity-70
           :style="{
-            background: `linear-gradient(to bottom, ${(settings.wallpaper
-              || settings.useSearchPageModeOnHomePage && settings.searchPageWallpaper && settings.individuallySetSearchPageWallpaper) && isHomePage()
-              ? 'rgba(0,0,0,.6)' : 'var(--bew-bg)'}, transparent)`,
+            background: `linear-gradient(to bottom, ${(
+              settings.wallpaper
+              || settings.useSearchPageModeOnHomePage
+              && settings.searchPageWallpaper
+              && settings.individuallySetSearchPageWallpaper)
+              && isHomePage()
+              ? 'rgba(0,0,0,.6)' : `${isHomePage() ? 'var(--bew-homepage-bg)' : 'var(--bew-bg)'}`}, transparent)`,
           }"
         />
       </Transition>
@@ -418,7 +423,7 @@ defineExpose({
               flex items-center border="1 $bew-border-color"
               rounded="50px" p="x-4" shadow="$bew-shadow-2" duration-300
               bg="$bew-elevated-1 hover:$bew-theme-color dark-hover:white"
-              w-auto h-50px
+              w-auto h-50px transform-gpu
             >
               <svg
                 t="1645466458357"
@@ -472,10 +477,11 @@ defineExpose({
           style="backdrop-filter: var(--bew-filter-glass-1)"
           ml-auto flex h-55px p-2 bg="$bew-elevated-1"
           text="$bew-text-1" border="1 $bew-border-color" rounded-full shadow="$bew-shadow-2"
+          transform-gpu
         >
           <div v-if="!isLogin" class="right-side-item">
             <a href="https://passport.bilibili.com/login" class="login">
-              <ic:outline-account-circle class="text-xl mr-2" />{{
+              <div i-ic:outline-account-circle class="text-xl mr-2" />{{
                 $t('topbar.sign_in')
               }}
             </a>
@@ -547,7 +553,7 @@ defineExpose({
             </div> -->
 
             <!-- TODO: need to refactor to above code -->
-            <div display="lg:flex none" gap-1>
+            <div class="hidden lg:flex" gap-1>
               <!-- Notifications -->
               <div
                 ref="notifications"
@@ -571,7 +577,7 @@ defineExpose({
                   :target="isHomePage() ? '_blank' : '_self'"
                   :title="$t('topbar.notifications')"
                 >
-                  <tabler:bell />
+                  <div i-tabler:bell />
                 </a>
 
                 <Transition name="slide-in">
@@ -605,7 +611,7 @@ defineExpose({
                   :target="isHomePage() ? '_blank' : '_self'"
                   :title="$t('topbar.moments')"
                 >
-                  <tabler:windmill />
+                  <div i-tabler:windmill />
                 </a>
 
                 <Transition name="slide-in">
@@ -624,7 +630,7 @@ defineExpose({
                   :target="isHomePage() ? '_blank' : '_self'"
                   :title="$t('topbar.favorites')"
                 >
-                  <mingcute:star-line />
+                  <div i-mingcute:star-line />
                 </a>
 
                 <Transition name="slide-in">
@@ -649,7 +655,7 @@ defineExpose({
                   :target="isHomePage() ? '_blank' : '_self'"
                   :title="$t('topbar.history')"
                 >
-                  <mingcute:time-line />
+                  <div i-mingcute:time-line />
                 </a>
 
                 <Transition name="slide-in">
@@ -668,7 +674,7 @@ defineExpose({
                   :target="isHomePage() ? '_blank' : '_self'"
                   :title="$t('topbar.watch_later')"
                 >
-                  <mingcute:carplay-line />
+                  <div i-mingcute:carplay-line />
                 </a>
 
                 <Transition name="slide-in">
@@ -683,7 +689,7 @@ defineExpose({
                   target="_blank"
                   :title="$t('topbar.creative_center')"
                 >
-                  <mingcute:bulb-line />
+                  <div i-mingcute:bulb-line />
                 </a>
               </div>
             </div>
@@ -691,12 +697,11 @@ defineExpose({
             <!-- More -->
             <div
               ref="more"
-              class="right-side-item"
+              class="right-side-item lg:!hidden flex"
               :class="{ active: popupVisible.more }"
-              display="lg:!none flex"
             >
               <a title="More">
-                <mingcute:menu-line />
+                <div i-mingcute:menu-line />
               </a>
 
               <Transition name="slide-in">
@@ -725,8 +730,8 @@ defineExpose({
                 filter="hover:brightness-110"
                 style="--un-shadow: 0 0 10px var(--bew-theme-color-60)"
               >
-                <mingcute:upload-2-line flex-shrink-0 />
-                <span m="l-2" display="xl:block none">{{
+                <div i-mingcute:upload-2-line flex-shrink-0 />
+                <span m="l-2" class="hidden xl:block">{{
                   $t('topbar.upload')
                 }}</span>
               </a>

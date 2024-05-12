@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import type { Ref } from 'vue'
+
+import Button from '~/components/Button.vue'
+import Empty from '~/components/Empty.vue'
+import Loading from '~/components/Loading.vue'
+import VideoCard from '~/components/VideoCard/VideoCard.vue'
+import VideoCardSkeleton from '~/components/VideoCard/VideoCardSkeleton.vue'
+import { useApiClient } from '~/composables/api'
+import { useBewlyApp } from '~/composables/useAppProvider'
 import type { GridLayout } from '~/logic'
 import type { DataItem as MomentItem, MomentResult } from '~/models/moment/moment'
-import API from '~/background/msg.define'
 
 const props = defineProps<{
   gridLayout: GridLayout
@@ -20,7 +27,7 @@ const gridValue = computed((): string => {
     return '~ cols-1 xl:cols-2 gap-4'
   return '~ cols-1 gap-4'
 })
-
+const api = useApiClient()
 const momentList = reactive<MomentItem[]>([])
 const isLoading = ref<boolean>(false)
 const needToLoginFirst = ref<boolean>(false)
@@ -86,10 +93,9 @@ async function getFollowedUsersVideos() {
   emit('beforeLoading')
   isLoading.value = true
   try {
-    const response: MomentResult = await browser.runtime.sendMessage({
-      contentScriptQuery: API.MOMENT.GET_MOMENTS,
+    const response: MomentResult = await api.moment.getMoments({
       type: 'pgc',
-      offset: offset.value,
+      offset: Number(offset.value),
       update_baseline: updateBaseline.value,
     })
 

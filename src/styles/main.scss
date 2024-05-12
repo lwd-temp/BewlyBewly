@@ -31,13 +31,13 @@ html.bewly-design > ::-webkit-scrollbar-track {
 }
 
 ::selection {
-  background: var(--bew-fill-3);
-  color: revert;
+  background: var(--bew-fill-3) !important;
+  color: revert !important;
 }
 
 html.bewly-design,
 .bewly-design body {
-  font-size: 14px !important;
+  // font-size: 14px !important;
   min-width: unset !important;
   filter: none !important;
   color: var(--bew-text-1);

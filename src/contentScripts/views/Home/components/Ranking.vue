@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import type { RankingType } from '../types'
-import type { RankingResult, List as RankingVideoItem } from '~/models/video/ranking'
-import type { List as RankingPgcItem, RankingPgcResult } from '~/models/video/rankingPgc'
+
+import LongCoverCard from '~/components/LongCoverCard/LongCoverCard.vue'
+import LongCoverCardSkeleton from '~/components/LongCoverCard/LongCoverCardSkeleton.vue'
+import OverlayScrollbarsComponent from '~/components/OverlayScrollbarsComponent'
+import VideoCard from '~/components/VideoCard/VideoCard.vue'
+import VideoCardSkeleton from '~/components/VideoCard/VideoCardSkeleton.vue'
+import { useApiClient } from '~/composables/api'
+import { useBewlyApp } from '~/composables/useAppProvider'
 import type { GridLayout } from '~/logic'
 import { settings } from '~/logic'
+import type { List as RankingVideoItem, RankingResult } from '~/models/video/ranking'
+import type { List as RankingPgcItem, RankingPgcResult } from '~/models/video/rankingPgc'
 import emitter from '~/utils/mitt'
-import API from '~/background/msg.define'
+
+import type { RankingType } from '../types'
 
 const props = defineProps<{
   gridLayout: GridLayout
@@ -18,6 +26,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const api = useApiClient()
 const { handleBackToTop, handlePageRefresh } = useBewlyApp()
 
 const gridValue = computed((): string => {
@@ -129,8 +138,7 @@ function getRankingVideos() {
   videoList.length = 0
   emit('beforeLoading')
   isLoading.value = true
-  browser.runtime.sendMessage({
-    contentScriptQuery: API.RANKING.GET_RANKING_VIDEOS,
+  api.ranking.getRankingVideos({
     rid: activatedRankingType.value.rid,
     type: 'type' in activatedRankingType.value ? activatedRankingType.value.type : 'all',
   }).then((response: RankingResult) => {
@@ -147,8 +155,7 @@ function getRankingVideos() {
 function getRankingPgc() {
   PgcList.length = 0
   isLoading.value = true
-  browser.runtime.sendMessage({
-    contentScriptQuery: API.RANKING.GET_RANKING_PGC,
+  api.ranking.getRankingPgc({
     season_type: activatedRankingType.value.seasonType,
   }).then((response: RankingPgcResult) => {
     if (response.code === 0)

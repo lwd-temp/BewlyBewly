@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import { useDateFormat } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
-import { getCSRF, openLinkToNewTab, removeHttpFromUrl } from '~/utils/main'
-import { calcCurrentTime } from '~/utils/dataFormatter'
+
+import Button from '~/components/Button.vue'
+import Empty from '~/components/Empty.vue'
+import Progress from '~/components/Progress.vue'
+import { useApiClient } from '~/composables/api'
+import { useBewlyApp } from '~/composables/useAppProvider'
 import type { List as VideoItem, WatchLaterResult } from '~/models/video/watchLater'
-import API from '~/background/msg.define'
+import { calcCurrentTime } from '~/utils/dataFormatter'
+import { getCSRF, openLinkToNewTab, removeHttpFromUrl } from '~/utils/main'
 
 const { t } = useI18n()
-
+const api = useApiClient()
 const isLoading = ref<boolean>()
 const noMoreContent = ref<boolean>()
 const watchLaterList = reactive<VideoItem[]>([])
@@ -34,10 +39,7 @@ function initPageAction() {
 function getAllWatchLaterList() {
   isLoading.value = true
   watchLaterList.length = 0
-  browser.runtime
-    .sendMessage({
-      contentScriptQuery: API.WATCHLATER.GET_ALL_WATCHLATER_LIST,
-    })
+  api.watchlater.getAllWatchLaterList()
     .then((res: WatchLaterResult) => {
       if (res.code === 0)
         Object.assign(watchLaterList, res.data.list)
@@ -47,12 +49,10 @@ function getAllWatchLaterList() {
 }
 
 function deleteWatchLaterItem(index: number, aid: number) {
-  browser.runtime
-    .sendMessage({
-      contentScriptQuery: API.WATCHLATER.REMOVE_FROM_WATCHLATER,
-      aid,
-      csrf: getCSRF(),
-    })
+  api.watchlater.removeFromWatchLater({
+    aid,
+    csrf: getCSRF(),
+  })
     .then((res) => {
       if (res.code === 0)
         watchLaterList.splice(index, 1)
@@ -65,8 +65,7 @@ function handleClearAllWatchLater() {
   )
   if (result) {
     isLoading.value = true
-    browser.runtime.sendMessage({
-      contentScriptQuery: API.WATCHLATER.CLEAR_ALL_WATCHLATER,
+    api.watchlater.clearAllWatchLater({
       csrf: getCSRF(),
     }).then((res) => {
       if (res.code === 0)
@@ -82,12 +81,10 @@ function handleRemoveWatchedVideos() {
     t('watch_later.remove_watched_videos_confirm'),
   )
   if (result) {
-    browser.runtime
-      .sendMessage({
-        contentScriptQuery: API.WATCHLATER.REMOVE_FROM_WATCHLATER,
-        viewed: true,
-        csrf: getCSRF(),
-      })
+    api.watchlater.removeFromWatchLater({
+      viewed: true,
+      csrf: getCSRF(),
+    })
       .then((res) => {
         if (res.code === 0)
           getAllWatchLaterList()
@@ -243,7 +240,7 @@ function jumpToLoginPage() {
                     duration-300
                     @click.prevent="deleteWatchLaterItem(index, item.aid)"
                   >
-                    <tabler:trash />
+                    <div i-tabler:trash />
                   </button>
                 </div>
 
@@ -272,8 +269,8 @@ function jumpToLoginPage() {
           z--1
         >
           <div
-            absolute w-full h-full backdrop-blur-40px
-            bg="$bew-fill-4" mix-blend-luminosity
+            absolute w-full h-full backdrop-blur-40px transform-gpu
+            bg="$bew-fill-4"
           />
           <img
             v-if="watchLaterList[0]"
@@ -301,7 +298,7 @@ function jumpToLoginPage() {
             @click="handlePlayAll"
           >
             <template #left>
-              <tabler:player-play />
+              <div i-tabler:player-play />
             </template>
             {{ t('common.play_all') }}
           </Button>
@@ -310,7 +307,7 @@ function jumpToLoginPage() {
             @click="handleClearAllWatchLater"
           >
             <template #left>
-              <tabler:trash />
+              <div i-tabler:trash />
             </template>
             {{ t('watch_later.clear_all') }}
           </Button>
@@ -319,7 +316,7 @@ function jumpToLoginPage() {
             @click="handleRemoveWatchedVideos"
           >
             <template #left>
-              <tabler:circle-minus />
+              <div i-tabler:circle-minus />
             </template>
             {{ t('watch_later.remove_watched_videos') }}
           </Button>

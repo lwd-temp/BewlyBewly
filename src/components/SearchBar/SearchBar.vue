@@ -1,6 +1,10 @@
-<!-- TODO: refactor all that code -->
 <script setup lang="ts">
 import { onKeyStroke } from '@vueuse/core'
+
+import { useApiClient } from '~/composables/api'
+import { useBewlyImage } from '~/composables/useImage'
+import { findLeafActiveElement } from '~/utils/element'
+
 import type { HistoryItem, SuggestionItem, SuggestionResponse } from './searchHistoryProvider'
 import {
   addSearchHistory,
@@ -8,8 +12,6 @@ import {
   getSearchHistory,
   removeSearchHistory,
 } from './searchHistoryProvider'
-import API from '~/background/msg.define'
-import { findLeafActiveElement } from '~/utils/element'
 
 defineProps<{
   darkenOnFocus?: boolean
@@ -17,6 +19,8 @@ defineProps<{
   focusedCharacter?: string
 }>()
 
+const { getBewlyImage } = useBewlyImage()
+const api = useApiClient()
 const keywordRef = ref<HTMLInputElement>()
 const isFocus = ref<boolean>(false)
 const keyword = ref<string>('')
@@ -56,12 +60,10 @@ onKeyStroke('Escape', (e: KeyboardEvent) => {
 
 function handleInput() {
   selectedIndex.value = -1
-  if (keyword.value.length > 0) {
-    browser.runtime
-      .sendMessage({
-        contentScriptQuery: API.SEARCH.GET_SEARCH_SUGGESTION,
-        term: keyword.value,
-      })
+  if (keyword.value.trim().length > 0) {
+    api.search.getSearchSuggestion({
+      term: keyword.value,
+    })
       .then((res: SuggestionResponse) => {
         if (!res || (res && res.code !== 0))
           return
@@ -187,18 +189,21 @@ async function handleClearSearchHistory() {
     <div
       v-if="blurredOnFocus"
       pos="fixed top-0 left-0" w-full h-full duration-500 pointer-events-none
-      ease-out
+      ease-out transform-gpu
       :style="{ backdropFilter: isFocus ? 'blur(15px)' : 'blur(0)' }"
     />
 
     <div class="search-bar group" :class="isFocus ? 'focus' : ''" flex="~" items-center pos="relative">
       <Transition name="focus-character">
-        <img v-show="focusedCharacter && isFocus" :src="focusedCharacter" width="100" object-contain pos="absolute right-0 bottom-40px">
+        <img
+          v-show="focusedCharacter && isFocus" :src="getBewlyImage(focusedCharacter || '')"
+          width="100" object-contain pos="absolute right-0 bottom-40px"
+        >
       </Transition>
 
       <input
         ref="keywordRef"
-        v-model.trim="keyword"
+        v-model="keyword"
         rounded="60px focus:$bew-radius"
         p="l-6 r-18 y-3"
         h-50px
@@ -221,7 +226,7 @@ async function handleClearSearchHistory() {
         flex="~ items-center justify-between"
         @click="keyword = ''"
       >
-        <ic-baseline-clear shrink-0 />
+        <div i-ic-baseline-clear shrink-0 />
       </button>
 
       <button
@@ -237,7 +242,7 @@ async function handleClearSearchHistory() {
         style="--un-drop-shadow: drop-shadow(0 0 6px var(--bew-theme-color))"
         @click="navigateToSearchResultPage(keyword)"
       >
-        <tabler:search block align-middle />
+        <div i-tabler:search block align-middle />
       </button>
     </div>
 
@@ -272,7 +277,7 @@ async function handleClearSearchHistory() {
                 pos="absolute top-0 right-0" scale-80 opacity-0 group-hover:opacity-100
                 @click.stop="handleDelete(item.value)"
               >
-                <ic-baseline-clear />
+                <div i-ic-baseline-clear />
               </button>
             </div>
           </div>
@@ -346,7 +351,7 @@ async function handleClearSearchHistory() {
 
   @mixin card-content {
     --at-apply: text-base outline-none w-full
-      bg-$b-search-bar-color shadow-$bew-shadow-2;
+      bg-$b-search-bar-color shadow-$bew-shadow-2 transform-gpu;
     backdrop-filter: var(--bew-filter-glass-1);
   }
 

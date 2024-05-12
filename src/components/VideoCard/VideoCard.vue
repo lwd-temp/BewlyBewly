@@ -1,10 +1,12 @@
 <script lang="ts" setup>
-import { Icon } from '@iconify/vue'
-import { getCSRF, removeHttpFromUrl } from '~/utils/main'
-import { calcCurrentTime, calcTimeSince, numFormatter } from '~/utils/dataFormatter'
-import type { VideoPreviewResult } from '~/models/video/videoPreview'
+import Button from '~/components/Button.vue'
+import { useApiClient } from '~/composables/api'
 import { settings } from '~/logic'
-import API from '~/background/msg.define'
+import type { VideoPreviewResult } from '~/models/video/videoPreview'
+import { calcCurrentTime, calcTimeSince, numFormatter } from '~/utils/dataFormatter'
+import { getCSRF, removeHttpFromUrl } from '~/utils/main'
+
+import Tooltip from '../Tooltip.vue'
 
 interface Props {
   id: number
@@ -30,7 +32,7 @@ interface Props {
   /** If you want to show preview video, you should set the cid value */
   cid?: number
   epid?: number
-  isFollowed?: boolean
+  followed?: boolean
   horizontal?: boolean
   tag?: string
   rank?: number
@@ -53,7 +55,14 @@ const emit = defineEmits<{
   (e: 'tellUsWhy'): void
 }>()
 
+const api = useApiClient()
+
+// Used to click and control herf attribute
+const isClick = ref<boolean>(false)
+
 const videoUrl = computed(() => {
+  if (!isClick.value)
+    return undefined
   if (props.bvid || props.aid)
     return `https://www.bilibili.com/video/${props.bvid ?? `av${props.aid}`}`
   else if (props.epid)
@@ -90,8 +99,7 @@ const previewVideoUrl = ref<string>('')
 watch(() => isHover.value, (newValue) => {
   if (props.showPreview && settings.value.enableVideoPreview) {
     if (newValue && !previewVideoUrl.value && props.cid) {
-      browser.runtime.sendMessage({
-        contentScriptQuery: API.VIDEO.GET_VIDEO_PREVIEW,
+      api.video.getVideoPreview({
         bvid: props.bvid,
         cid: props.cid,
       }).then((res: VideoPreviewResult) => {
@@ -104,8 +112,7 @@ watch(() => isHover.value, (newValue) => {
 
 function toggleWatchLater() {
   if (!isInWatchLater.value) {
-    browser.runtime.sendMessage({
-      contentScriptQuery: API.WATCHLATER.SAVE_TO_WATCHLATER,
+    api.watchlater.saveToWatchLater({
       aid: props.id,
       csrf: getCSRF(),
     })
@@ -115,8 +122,7 @@ function toggleWatchLater() {
       })
   }
   else {
-    browser.runtime.sendMessage({
-      contentScriptQuery: API.WATCHLATER.REMOVE_FROM_WATCHLATER,
+    api.watchlater.removeFromWatchLater({
       aid: props.id,
       csrf: getCSRF(),
     })
@@ -151,6 +157,17 @@ function handelMouseLeave() {
   }, 300)
 }
 
+function switchClickState(flag: boolean) {
+  if (flag) {
+    isClick.value = flag
+  }
+  else {
+    setTimeout(() => {
+      isClick.value = flag
+    })
+  }
+}
+
 function handleMoreBtnClick(event: MouseEvent) {
   emit('moreClick', event)
 }
@@ -183,7 +200,7 @@ function handleUndo() {
 
           <div
             pos="absolute top-0 left-0" w-full h-fit aspect-video flex="~ col gap-2 items-center justify-center"
-            bg="$bew-fill-4" backdrop-blur-20px mix-blend-luminosity rounded="$bew-radius"
+            bg="$bew-fill-4" backdrop-blur-20px mix-blend-luminosity transform-gpu rounded="$bew-radius"
           >
             <p mb-2 color-white text-lg>
               {{ $t('home.video_removed') }}
@@ -193,7 +210,7 @@ function handleUndo() {
               @click="handleUndo"
             >
               <template #left>
-                <Icon icon="mingcute:back-line" text-lg />
+                <div i-mingcute-back-line text-lg />
               </template>
               {{ $t('common.undo') }}
             </Button>
@@ -214,6 +231,9 @@ function handleUndo() {
         :href="videoUrl" target="_blank" rel="noopener noreferrer"
         @mouseenter="handleMouseEnter"
         @mouseleave="handelMouseLeave"
+        @mousedown="switchClickState(true)"
+        @mouseup="switchClickState(false)"
+        @dragend="switchClickState(false)"
       >
         <!-- Cover -->
         <div
@@ -232,6 +252,7 @@ function handleUndo() {
               :controls="settings.enableVideoCtrlBarOnVideoCard"
               :style="{ pointerEvents: settings.enableVideoCtrlBarOnVideoCard ? 'auto' : 'none' }"
               pos="absolute top-0 left-0" w-full aspect-video rounded="$bew-radius" bg-black
+              @mouseenter="handleMouseEnter"
             >
               <source :src="previewVideoUrl" type="video/mp4">
             </video>
@@ -297,11 +318,11 @@ function handleUndo() {
             duration-300
             @click.prevent="toggleWatchLater"
           >
-            <Tooltip v-show="!isInWatchLater" :content="$t('common.save_to_watch_later')" placement="bottom" type="dark">
-              <mingcute:carplay-line />
+            <Tooltip v-if="!isInWatchLater" :content="$t('common.save_to_watch_later')" placement="bottom" type="dark">
+              <div i-mingcute:carplay-line />
             </Tooltip>
-            <Tooltip v-show="isInWatchLater" :content="$t('common.added')" placement="bottom" type="dark">
-              <line-md:confirm />
+            <Tooltip v-else :content="$t('common.added')" placement="bottom" type="dark">
+              <div i-line-md:confirm />
             </Tooltip>
           </button>
 
@@ -328,16 +349,28 @@ function handleUndo() {
             <a
               v-if="authorFace"
               :href="authorJumpUrl" target="_blank" rel="noopener noreferrer"
-              m="r-4" w="36px" h="36px" rounded="1/2" overflow="hidden"
+              m="r-4" w="36px" h="36px" rounded="1/2"
               object="center cover" bg="$bew-fill-4" cursor="pointer"
+              position-relative
               @click.stop=""
             >
               <img
+                rounded="1/2"
                 :src="`${removeHttpFromUrl(authorFace)}@50w_50h_1c`"
-                width="40"
-                height="40"
+                width="36"
+                height="36"
                 loading="lazy"
               >
+              <div
+                v-if="followed"
+                pos="absolute bottom--2px right--2px"
+                w-14px h-14px
+                bg="$bew-theme-color"
+                rounded="1/2"
+                grid place-items-center
+              >
+                <div color-white text-sm class="i-mingcute:check-fill w-10px h-10px" />
+              </div>
             </a>
           </div>
           <div class="group/desc" flex="~ col" w="full" align="items-start">
@@ -361,18 +394,18 @@ function handleUndo() {
                 pointer="auto" rounded="50%" duration-300
                 @click.prevent="handleMoreBtnClick"
               >
-                <mingcute:more-2-line text="lg" />
+                <div i-mingcute:more-2-line text="lg" />
               </div>
             </div>
             <div text="base $bew-text-2" w-fit m="t-2" flex="~ items-center wrap">
               <!-- Author Avatar -->
               <span flex="inline items-center">
-                <div v-if="horizontal" flex>
+                <div v-if="horizontal" flex mb-2>
                   <a
                     v-if="authorFace"
-                    m="r-2" w="30px" h="30px" rounded="1/2" overflow="hidden"
-                    object="center cover" bg="$bew-fill-4" cursor="pointer"
                     :href="authorJumpUrl" target="_blank" rel="noopener noreferrer"
+                    m="r-2" w="30px" h="30px" rounded="1/2"
+                    object="center cover" bg="$bew-fill-4" cursor="pointer" relative
                     @click.stop=""
                   >
                     <img
@@ -380,8 +413,18 @@ function handleUndo() {
                       width="30"
                       height="30"
                       loading="lazy"
-                      object-cover
+                      object-cover rounded="1/2"
                     >
+                    <div
+                      v-if="followed"
+                      pos="absolute bottom--2px right--2px"
+                      w-14px h-14px
+                      bg="$bew-theme-color"
+                      rounded="1/2"
+                      grid place-items-center
+                    >
+                      <div color-white text-sm class="i-mingcute:check-fill w-10px h-10px" />
+                    </div>
                   </a>
                 </div>
 
@@ -394,42 +437,46 @@ function handleUndo() {
                   @click.stop=""
                 >
                   <span>{{ author }}</span>
-                  <template v-if="publishedTimestamp || capsuleText">
-                    <span text-xs font-light mx-1>•</span>
-                    <span>{{ publishedTimestamp ? calcTimeSince(publishedTimestamp * 1000) : capsuleText?.trim() }}</span>
-                  </template>
                 </a>
               </span>
             </div>
 
-            <div flex="~ items-center gap-1 wrap" mt-2>
-              <!-- Tag -->
-              <span
-                v-if="tag"
-                text="sm $bew-theme-color" p="x-2 y-1" rounded="$bew-radius" bg="$bew-theme-color-20"
-              >
-                {{ tag }}
-              </span>
+            <div flex="~ items-center gap-1 wrap">
               <!-- View & Danmaku Count -->
               <div
-                text="sm $bew-text-3" p="x-2 y-1" rounded="$bew-radius" bg="$bew-fill-1"
+                text="$bew-text-2" rounded="$bew-radius"
                 inline-block
               >
                 <span v-if="view || viewStr">
                   {{ view ? $t('common.view', { count: numFormatter(view) }, view) : `${viewStr}${$t('common.viewWithoutNum')}` }}
                 </span>
                 <template v-if="danmaku || danmakuStr">
-                  <span ml-2>{{ danmaku ? $t('common.danmaku', { count: numFormatter(danmaku) }, danmaku) : `${danmakuStr}${$t('common.danmakuWithoutNum')}` }}</span>
+                  <span text-xs font-light mx-4px>•</span>
+                  <span>{{ danmaku ? $t('common.danmaku', { count: numFormatter(danmaku) }, danmaku) : `${danmakuStr}${$t('common.danmakuWithoutNum')}` }}</span>
                 </template>
                 <br>
               </div>
-              <div flex="inline items-center" ml-1>
-                <!-- Video type -->
-                <span text="$bew-text-2" inline-block>
-                  <mingcute:cellphone-2-line v-if="type === 'vertical'" />
-                  <mingcute:movie-line v-else-if="type === 'bangumi'" />
-                </span>
-              </div>
+            </div>
+            <div mt-2 flex="~ gap-1">
+              <!-- Tag -->
+              <span
+                v-if="tag"
+                text="$bew-theme-color sm" lh-6 p="x-2" rounded="$bew-radius" bg="$bew-theme-color-20"
+              >
+                {{ tag }}
+              </span>
+              <span
+                v-if="publishedTimestamp || capsuleText"
+                bg="$bew-fill-1" p="x-2" rounded="$bew-radius" text="sm $bew-text-3" lh-6
+                mr-1
+              >
+                {{ publishedTimestamp ? calcTimeSince(publishedTimestamp * 1000) : capsuleText?.trim() }}
+              </span>
+              <!-- Video type -->
+              <span text="$bew-text-2" grid="~ place-items-center">
+                <div v-if="type === 'vertical'" i-mingcute:cellphone-2-line />
+                <div v-else-if="type === 'bangumi'" i-mingcute:movie-line />
+              </span>
             </div>
           </div>
         </div>
@@ -439,7 +486,7 @@ function handleUndo() {
     <!-- skeleton -->
     <template v-if="!horizontal">
       <div
-        block mb-6 pointer-events-none select-none invisible
+        block mb-4 pointer-events-none select-none invisible
       >
         <!-- Cover -->
         <div w-full shrink-0 aspect-video h-fit rounded="$bew-radius" />
@@ -456,6 +503,7 @@ function handleUndo() {
               <div w="3/4" h-5 />
             </div>
             <div grid gap-2 mt-4>
+              <div w="40%" h-4 />
               <div w="80%" h-4 />
             </div>
             <div mt-2 flex>
@@ -470,7 +518,7 @@ function handleUndo() {
     <template v-else>
       <div
         flex="~ gap-6"
-        mb-6 pointer-events-none select-none invisible
+        mb-4 pointer-events-none select-none invisible
       >
         <!-- Cover -->
         <div

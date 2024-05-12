@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
-import { calcCurrentTime } from '~/utils/dataFormatter'
-import type { List as VideoItem, WatchLaterResult } from '~/models/video/watchLater'
-import { isHomePage, removeHttpFromUrl } from '~/utils/main'
-import API from '~/background/msg.define'
 
+import Empty from '~/components/Empty.vue'
+import Loading from '~/components/Loading.vue'
+import Progress from '~/components/Progress.vue'
+import { useApiClient } from '~/composables/api'
+import type { List as VideoItem, WatchLaterResult } from '~/models/video/watchLater'
+import { calcCurrentTime } from '~/utils/dataFormatter'
+import { isHomePage, removeHttpFromUrl } from '~/utils/main'
+
+const api = useApiClient()
 const watchLaterList = reactive<VideoItem[]>([])
 const isLoading = ref<boolean>()
-
 const viewAllUrl = computed((): string => {
   return 'https://www.bilibili.com/watchlater/#/list'
 })
@@ -35,10 +39,7 @@ function getAllWatchLaterList() {
   isLoading.value = true
   watchLaterList.length = 0
 
-  browser.runtime
-    .sendMessage({
-      contentScriptQuery: API.WATCHLATER.GET_ALL_WATCHLATER_LIST,
-    })
+  api.watchlater.getAllWatchLaterList()
     .then((res: WatchLaterResult) => {
       if (res.code === 0)
         Object.assign(watchLaterList, res.data.list)
@@ -195,7 +196,7 @@ function getAllWatchLaterList() {
 
         <!-- loading -->
         <Transition name="fade">
-          <loading v-if="isLoading && watchLaterList.length !== 0" m="-t-4" />
+          <Loading v-if="isLoading && watchLaterList.length !== 0" m="-t-4" />
         </Transition>
       </div>
     </main>

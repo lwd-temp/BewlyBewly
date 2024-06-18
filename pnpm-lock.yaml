@@ -81,7 +81,7 @@ devDependencies:
     version: 0.54.3
   '@vitejs/plugin-vue':
     specifier: ^3.2.0
-    version: 3.2.0(vite@3.2.8)(vue@3.4.19)
+    version: 3.2.0(vite@3.2.10)(vue@3.4.19)
   '@vue/compiler-sfc':
     specifier: ^3.4.19
     version: 3.4.19
@@ -135,13 +135,13 @@ devDependencies:
     version: 5.27.1
   tsup:
     specifier: ^6.7.0
-    version: 6.7.0(postcss@8.4.33)(typescript@4.9.5)
+    version: 6.7.0(postcss@8.4.38)(typescript@4.9.5)
   typescript:
     specifier: ^4.9.5
     version: 4.9.5
   unocss:
     specifier: ^0.54.3
-    version: 0.54.3(postcss@8.4.33)(vite@3.2.8)
+    version: 0.54.3(postcss@8.4.38)(vite@3.2.10)
   unplugin-auto-import:
     specifier: ^0.11.5
     version: 0.11.5(@vueuse/core@10.7.2)
@@ -152,8 +152,8 @@ devDependencies:
     specifier: ^0.22.12
     version: 0.22.12(vue@3.4.19)
   vite:
-    specifier: ^3.2.8
-    version: 3.2.8(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1)
+    specifier: ^3.2.10
+    version: 3.2.10(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1)
   vitest:
     specifier: ^0.24.5
     version: 0.24.5(jsdom@20.0.3)(sass@1.71.0)(terser@5.27.1)
@@ -926,8 +926,8 @@ packages:
       vue-i18n:
         optional: true
     dependencies:
-      '@intlify/message-compiler': 9.4.1
-      '@intlify/shared': 9.4.1
+      '@intlify/message-compiler': 10.0.0-beta.1
+      '@intlify/shared': 10.0.0-beta.1
       jsonc-eslint-parser: 1.4.1
       source-map: 0.6.1
       vue-i18n: 9.9.1(vue@3.4.19)
@@ -941,12 +941,12 @@ packages:
       '@intlify/message-compiler': 9.9.1
       '@intlify/shared': 9.9.1
 
-  /@intlify/message-compiler@9.4.1:
-    resolution: {integrity: sha512-aN2N+dUx320108QhH51Ycd2LEpZ+NKbzyQ2kjjhqMcxhHdxtOnkgdx+MDBhOy/CObwBmhC3Nygzc6hNlfKvPNw==}
+  /@intlify/message-compiler@10.0.0-beta.1:
+    resolution: {integrity: sha512-rBmXBZzDgq3yPkL/3/r9uK0nrsJOYHSpaW0mtGBxxjt9pY9vaPL0UAKbVAjFPRnfEY41ixgpkpTjai6IKZ+hvg==}
     engines: {node: '>= 16'}
     dependencies:
-      '@intlify/shared': 9.4.1
-      source-map-js: 1.0.2
+      '@intlify/shared': 10.0.0-beta.1
+      source-map-js: 1.2.0
     dev: true
 
   /@intlify/message-compiler@9.9.1:
@@ -954,10 +954,10 @@ packages:
     engines: {node: '>= 16'}
     dependencies:
       '@intlify/shared': 9.9.1
-      source-map-js: 1.0.2
+      source-map-js: 1.2.0
 
-  /@intlify/shared@9.4.1:
-    resolution: {integrity: sha512-A51elBmZWf1FS80inf/32diO9DeXoqg9GR9aUDHFcfHoNDuT46Q+fpPOdj8jiJnSHSBh8E1E+6qWRhAZXdK3Ng==}
+  /@intlify/shared@10.0.0-beta.1:
+    resolution: {integrity: sha512-61MnYhgqS/TyAto9CXOltHlhK2WflLBcKpIkRhZCUL2IkiVvh7qKevsqZ3RYZylyC3q19ajLW6mB+iJtnbAOpg==}
     engines: {node: '>= 16'}
     dev: true
 
@@ -981,7 +981,7 @@ packages:
         optional: true
     dependencies:
       '@intlify/bundle-utils': 4.0.0(vue-i18n@9.9.1)
-      '@intlify/shared': 9.4.1
+      '@intlify/shared': 10.0.0-beta.1
       '@rollup/pluginutils': 4.2.1
       '@vue/compiler-sfc': 3.4.19
       debug: 4.3.4
@@ -1647,12 +1647,12 @@ packages:
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
     dev: true
 
-  /@unocss/astro@0.54.3(vite@3.2.8):
+  /@unocss/astro@0.54.3(vite@3.2.10):
     resolution: {integrity: sha512-/gmnSIIsYtAVPbcIGXuuaoCM71x8s8I0VtsEQZicNB51ux7BhSyXIQ5CE/W384NqTaqJt7gHVfbjn+io4ZSJXw==}
     dependencies:
       '@unocss/core': 0.54.3
       '@unocss/reset': 0.54.3
-      '@unocss/vite': 0.54.3(vite@3.2.8)
+      '@unocss/vite': 0.54.3(vite@3.2.10)
     transitivePeerDependencies:
       - rollup
       - vite
@@ -1705,7 +1705,7 @@ packages:
       sirv: 2.0.4
     dev: true
 
-  /@unocss/postcss@0.54.3(postcss@8.4.33):
+  /@unocss/postcss@0.54.3(postcss@8.4.38):
     resolution: {integrity: sha512-LPVSa+euzeh9Nzsb/IJI2ZeW0SUeifn0dRmPtB3bTOHkVeVba8IFWPzU3grC+m2tU9ysiTLs/9U2tLObljfC3g==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -1716,7 +1716,7 @@ packages:
       css-tree: 2.3.1
       fast-glob: 3.3.2
       magic-string: 0.30.5
-      postcss: 8.4.33
+      postcss: 8.4.38
     dev: true
 
   /@unocss/preset-attributify@0.54.3:
@@ -1816,7 +1816,7 @@ packages:
       '@unocss/core': 0.54.3
     dev: true
 
-  /@unocss/vite@0.54.3(vite@3.2.8):
+  /@unocss/vite@0.54.3(vite@3.2.10):
     resolution: {integrity: sha512-UxVo7WQpTAr5uHyjLKW1xs5kcecctUXsPApUChFxQwHRUeMT1gnBftd0r7dtSwdsdELClbIUgRVCrpFAPy2Y3g==}
     peerDependencies:
       vite: ^2.9.0 || ^3.0.0-0 || ^4.0.0
@@ -1831,19 +1831,19 @@ packages:
       chokidar: 3.6.0
       fast-glob: 3.3.2
       magic-string: 0.30.5
-      vite: 3.2.8(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1)
+      vite: 3.2.10(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1)
     transitivePeerDependencies:
       - rollup
     dev: true
 
-  /@vitejs/plugin-vue@3.2.0(vite@3.2.8)(vue@3.4.19):
+  /@vitejs/plugin-vue@3.2.0(vite@3.2.10)(vue@3.4.19):
     resolution: {integrity: sha512-E0tnaL4fr+qkdCNxJ+Xd0yM31UwMkQje76fsDVBBUCoGOUPexu2VDUYHL8P4CwV+zMvWw6nlRw19OnRKmYAJpw==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^3.0.0
       vue: ^3.2.25
     dependencies:
-      vite: 3.2.8(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1)
+      vite: 3.2.10(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1)
       vue: 3.4.19(typescript@4.9.5)
     dev: true
 
@@ -2298,7 +2298,7 @@ packages:
   /axios@1.2.3:
     resolution: {integrity: sha512-pdDkMYJeuXLZ6Xj/Q5J3Phpe+jbGdsSzlQaFVkMQzRUL05+6+tetX8TV3p4HrU4kzuO9bt+io/yGQxuyxA/xcw==}
     dependencies:
-      follow-redirects: 1.15.5
+      follow-redirects: 1.15.6
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -2897,7 +2897,7 @@ packages:
     engines: {node: ^10 || ^12.20.0 || ^14.13.0 || >=15.0.0}
     dependencies:
       mdn-data: 2.0.30
-      source-map-js: 1.0.2
+      source-map-js: 1.2.0
     dev: true
 
   /css-what@6.1.0:
@@ -4285,8 +4285,8 @@ packages:
     resolution: {integrity: sha512-36yxDn5H7OFZQla0/jFJmbIKTdZAQHngCedGxiMmpNfEZM0sdEeT+WczLQrjK6D7o2aiyLYDnkw0R3JK0Qv1RQ==}
     dev: true
 
-  /follow-redirects@1.15.5:
-    resolution: {integrity: sha512-vSFWUON1B+yAw1VN4xMfxgn5fTUiaOzAJCKBwIIgT/+7CuGy9+r+5gITvP62j3RmaD5Ph65UaERdOSRGUzZtgw==}
+  /follow-redirects@1.15.6:
+    resolution: {integrity: sha512-wWN62YITEaOpSK584EZXJafH1AGpO8RVgElfkuXbTOrPX4fIfOyEpW/CsiNd8JdYrAoOvafRTOEnvsO++qCqFA==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -6301,6 +6301,10 @@ packages:
   /picocolors@1.0.0:
     resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==}
 
+  /picocolors@1.0.1:
+    resolution: {integrity: sha512-anP1Z8qwhkbmu7MFP5iTt+wQKXgwzf7zTyGlcdzabySa9vd0Xt392U0rVmz9poOaBj0uHJKyyo9/upk0HrEQew==}
+    dev: true
+
   /picomatch@2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
@@ -6392,7 +6396,7 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
-  /postcss-load-config@3.1.4(postcss@8.4.33):
+  /postcss-load-config@3.1.4(postcss@8.4.38):
     resolution: {integrity: sha512-6DiM4E7v4coTE4uzA8U//WhtPwyhiim3eyjEMFCnUpzbrkK9wJHgKDT2mR+HbtSrd/NubVaYTOpSpjUl8NQeRg==}
     engines: {node: '>= 10'}
     peerDependencies:
@@ -6405,7 +6409,7 @@ packages:
         optional: true
     dependencies:
       lilconfig: 2.1.0
-      postcss: 8.4.33
+      postcss: 8.4.38
       yaml: 1.10.2
     dev: true
 
@@ -6424,6 +6428,15 @@ packages:
       nanoid: 3.3.7
       picocolors: 1.0.0
       source-map-js: 1.0.2
+
+  /postcss@8.4.38:
+    resolution: {integrity: sha512-Wglpdk03BSfXkHoQa3b/oulrotAkwrlLDRSOb9D0bN86FdRyE9lppSp33aHNPgBa0JKCoB+drFLZkQoRRYae5A==}
+    engines: {node: ^10 || ^12 || >=14}
+    dependencies:
+      nanoid: 3.3.7
+      picocolors: 1.0.1
+      source-map-js: 1.2.0
+    dev: true
 
   /prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -7065,6 +7078,10 @@ packages:
     resolution: {integrity: sha512-R0XvVJ9WusLiqTCEiGCmICCMplcCkIwwR11mOSD9CR5u+IXYdiseeEuXCVAjS54zqwkLcPNnmU4OeJ6tUrWhDw==}
     engines: {node: '>=0.10.0'}
 
+  /source-map-js@1.2.0:
+    resolution: {integrity: sha512-itJW8lvSA0TXEphiRoawsCksnlf8SyvmFzIhltqAHluXd88pkCd+cXJVHTDwdCr0IzwptSm035IHQktUu1QUMg==}
+    engines: {node: '>=0.10.0'}
+
   /source-map-support@0.5.21:
     resolution: {integrity: sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w==}
     dependencies:
@@ -7532,7 +7549,7 @@ packages:
     resolution: {integrity: sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==}
     dev: true
 
-  /tsup@6.7.0(postcss@8.4.33)(typescript@4.9.5):
+  /tsup@6.7.0(postcss@8.4.38)(typescript@4.9.5):
     resolution: {integrity: sha512-L3o8hGkaHnu5TdJns+mCqFsDBo83bJ44rlK7e6VdanIvpea4ArPcU3swWGsLVbXak1PqQx/V+SSmFPujBK+zEQ==}
     engines: {node: '>=14.18'}
     hasBin: true
@@ -7556,8 +7573,8 @@ packages:
       execa: 5.1.1
       globby: 11.1.0
       joycon: 3.1.1
-      postcss: 8.4.33
-      postcss-load-config: 3.1.4(postcss@8.4.33)
+      postcss: 8.4.38
+      postcss-load-config: 3.1.4(postcss@8.4.38)
       resolve-from: 5.0.0
       rollup: 3.29.4
       source-map: 0.8.0-beta.0
@@ -7767,7 +7784,7 @@ packages:
     engines: {node: '>= 10.0.0'}
     dev: true
 
-  /unocss@0.54.3(postcss@8.4.33)(vite@3.2.8):
+  /unocss@0.54.3(postcss@8.4.38)(vite@3.2.10):
     resolution: {integrity: sha512-uaoCKFigRkqceLmBrtWhLqQR6D6NyBAtSFVUnM1m57BSqA0EwAFmBsgoynzAmZRTQQFsPrBzKQjEmaCUTyUd9Q==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -7776,11 +7793,11 @@ packages:
       '@unocss/webpack':
         optional: true
     dependencies:
-      '@unocss/astro': 0.54.3(vite@3.2.8)
+      '@unocss/astro': 0.54.3(vite@3.2.10)
       '@unocss/cli': 0.54.3
       '@unocss/core': 0.54.3
       '@unocss/extractor-arbitrary-variants': 0.54.3
-      '@unocss/postcss': 0.54.3(postcss@8.4.33)
+      '@unocss/postcss': 0.54.3(postcss@8.4.38)
       '@unocss/preset-attributify': 0.54.3
       '@unocss/preset-icons': 0.54.3
       '@unocss/preset-mini': 0.54.3
@@ -7795,7 +7812,7 @@ packages:
       '@unocss/transformer-compile-class': 0.54.3
       '@unocss/transformer-directives': 0.54.3
       '@unocss/transformer-variant-group': 0.54.3
-      '@unocss/vite': 0.54.3(vite@3.2.8)
+      '@unocss/vite': 0.54.3(vite@3.2.10)
     transitivePeerDependencies:
       - postcss
       - rollup
@@ -7967,8 +7984,8 @@ packages:
       extsprintf: 1.3.0
     dev: true
 
-  /vite@3.2.8(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1):
-    resolution: {integrity: sha512-EtQU16PLIJpAZol2cTLttNP1mX6L0SyI0pgQB1VOoWeQnMSvtiwovV3D6NcjN8CZQWWyESD2v5NGnpz5RvgOZA==}
+  /vite@3.2.10(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1):
+    resolution: {integrity: sha512-Dx3olBo/ODNiMVk/cA5Yft9Ws+snLOXrhLtrI3F4XLt4syz2Yg8fayZMWScPKoz12v5BUv7VEmQHnsfpY80fYw==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
@@ -8036,7 +8053,7 @@ packages:
       tinybench: 2.5.1
       tinypool: 0.3.1
       tinyspy: 1.1.1
-      vite: 3.2.8(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1)
+      vite: 3.2.10(@types/node@18.19.17)(sass@1.71.0)(terser@5.27.1)
     transitivePeerDependencies:
       - less
       - sass

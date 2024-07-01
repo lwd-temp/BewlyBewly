@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import type { UserInfo, UserStat } from '../types'
+
+import { useApiClient } from '~/composables/api'
 import { revokeAccessKey } from '~/utils/authProvider'
-import { getCSRF, getUserID, isHomePage } from '~/utils/main'
 import { numFormatter } from '~/utils/dataFormatter'
-import API from '~/background/msg.define'
+import { getCSRF, getUserID, isHomePage } from '~/utils/main'
+
+import type { UserInfo, UserStat } from '../types'
 
 defineProps<{
   userInfo: UserInfo
 }>()
 
 const { t } = useI18n()
+const api = useApiClient()
 
 const mid = computed(() => {
   return getUserID()
@@ -22,6 +25,7 @@ const otherLinks = computed((): { name: string, url: string }[] => {
     { name: t('topbar.user_dropdown.uploads_manager'), url: 'https://member.bilibili.com/v2#/upload-manager/article' },
     { name: t('topbar.user_dropdown.b_coins_wallet'), url: 'https://pay.bilibili.com/' },
     { name: t('topbar.user_dropdown.orders'), url: 'https://show.bilibili.com/orderlist' },
+    { name: t('topbar.user_dropdown.workshop'), url: 'https://gf.bilibili.com?msource=main_station' },
     { name: t('topbar.user_dropdown.my_stream_info'), url: 'https://link.bilibili.com/p/center/index' },
     { name: t('topbar.user_dropdown.my_courses'), url: 'https://www.bilibili.com/cheese/mine/list' },
   ]
@@ -30,10 +34,7 @@ const otherLinks = computed((): { name: string, url: string }[] => {
 const userStat = reactive<UserStat>({} as UserStat)
 
 onMounted(() => {
-  browser.runtime
-    .sendMessage({
-      contentScriptQuery: API.USER.GET_USER_STAT,
-    })
+  api.user.getUserStat()
     .then((res) => {
       if (res.code === 0)
         Object.assign(userStat, res.data)
@@ -42,8 +43,7 @@ onMounted(() => {
 
 async function logout() {
   revokeAccessKey()
-  browser.runtime.sendMessage({
-    contentScriptQuery: API.AUTH.LOGOUT,
+  api.auth.logout({
     biliCSRF: getCSRF(),
   }).then(() => {
     location.reload()
@@ -61,7 +61,7 @@ async function logout() {
         leading-none
       >
         <span>{{ userInfo.level_info?.current_level ? userInfo.level_info.current_level : '0' }}</span>
-        <tabler:bolt v-if="userInfo.is_senior_member" />
+        <div v-if="userInfo.is_senior_member" i-tabler:bolt />
       </div>
     </div>
     <div
@@ -122,7 +122,7 @@ async function logout() {
     <div id="other-link">
       <a v-for="item in otherLinks" :key="item.url" :href="item.url" target="_blank">
         {{ item.name }}
-        <tabler:arrow-right />
+        <div i-tabler:arrow-right />
       </a>
       <div id="logout" @click="logout()">
         {{ $t('topbar.user_dropdown.log_out') }}
@@ -133,59 +133,56 @@ async function logout() {
 
 <style lang="scss" scoped>
 #user-info-panel {
-  --at-apply: p-4 rounded-$bew-radius w-300px -z-1
-    bg-$bew-elevated-solid-1 shadow-$bew-shadow-3;
+  --uno: "p-4 rounded-$bew-radius w-300px -z-1 bg-$bew-elevated";
+  --uno: "border-1 border-$bew-border-color shadow-[var(--bew-shadow-edge-glow-1),var(--bew-shadow-3)]";
+  backdrop-filter: var(--bew-filter-glass-1);
 }
 
 #base-info {
-  --at-apply: mt-8 text-xl font-medium flex items-center justify-center;
+  --uno: "mt-8 text-xl font-medium flex items-center justify-center";
 }
 
 #channel-info {
-  --at-apply: grid grid-cols-3 gap-x-2 mb-2;
+  --uno: "grid grid-cols-3 gap-x-2 mb-2";
 
   a {
-    --at-apply: p-2 m-0 rounded-$bew-radius text-sm
-      flex flex-col items-center transition-all duration-300
-      bg-$bew-fill-1
-      // hover:bg-$bew-theme-color
-      hover:text-white;
+    --uno: "p-2 m-0 rounded-$bew-radius text-sm flex flex-col items-center transition-all duration-300";
+    --uno: "bg-$bew-fill-1 shadow-[var(--bew-shadow-edge-glow-1)] hover:bg-$bew-theme-color";
 
     > * {
-      // --at-apply: transition-all duration-300;
+      --uno: "transition-all duration-300";
     }
 
-    &:hover .num + div{
-      --at-apply: text-white;
+    &:hover .num,
+    &:hover .num + div {
+      --uno: "text-white";
     }
 
     .num {
-      --at-apply: font-semibold text-xl;
+      --uno: "font-semibold text-xl";
 
       + div {
-        --at-apply: text-$bew-text-2 mt-1 text-xs font-semibold;
+        --uno: "text-$bew-text-2 mt-1 text-xs font-semibold";
       }
     }
   }
 }
 
 #other-link {
-  --at-apply: flex justify-between flex-col mt-4;
+  --uno: "flex justify-between flex-col mt-4";
 
   a {
-    --at-apply: px-4 py-2 mb-1 flex justify-between items-center
-      rounded-$bew-radius transition-all duration-300
-      hover:bg-$bew-fill-2;
+    --uno: "px-4 py-2 mb-1 flex justify-between items-center rounded-$bew-radius transition-all duration-300 hover:bg-$bew-fill-2";
+    --uno: "hover:shadow-[var(--bew-shadow-edge-glow-1),var(--bew-shadow-1)]";
 
     span {
-      --at-apply: text-$bew-text-2;
+      --uno: "text-$bew-text-2";
     }
   }
 }
 
 #logout {
-  --at-apply: text-red-400 important:block px-4 py-2 rounded-$bew-radius
-    duration-300 cursor-pointer
-    hover:bg-$bew-fill-2;
+  --uno: "text-$bew-error-color important:block px-4 py-2 rounded-$bew-radius duration-300 cursor-pointer hover:bg-$bew-fill-2";
+  --uno: "hover:shadow-[var(--bew-shadow-edge-glow-1),var(--bew-shadow-1)]";
 }
 </style>

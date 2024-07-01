@@ -3,15 +3,15 @@
 [English](README.md) | [官话 - 简体中文](README-cmn_CN.md) | 官話 - 正體中文 | [廣東話](README-jyut.md)
 
 <p align="center" style="margin-bottom: 0px !important;">
-<img width="150" src="https://user-images.githubusercontent.com/33394391/160250512-410b71fc-7f25-4caf-b850-429227ff082a.png"><br/>
+<img width="100" alt="BewlyBewly icon" src="https://user-images.githubusercontent.com/33394391/160250512-410b71fc-7f25-4caf-b850-429227ff082a.png"><br/>
 </p>
 
 <h1 align="center" style="margin-top: 0px;">BewlyBewly</h1>
 
 <p align="center">只需對您的 Bilibili 主頁進行一些小改動就好。</p>
 
-![min1](https://github.com/hakadao/BewlyBewly/assets/33394391/951f9e2a-d0e1-452c-83a9-dc6d85c4d441)
-![min2](https://github.com/hakadao/BewlyBewly/assets/33394391/3e75dd20-f60b-4645-b434-23a24c72959c)
+<!-- ![min1](https://github.com/hakadao/BewlyBewly/assets/33394391/951f9e2a-d0e1-452c-83a9-dc6d85c4d441)
+![min2](https://github.com/hakadao/BewlyBewly/assets/33394391/3e75dd20-f60b-4645-b434-23a24c72959c) -->
 
 ## 👋 介紹
 
@@ -19,15 +19,42 @@ BewlyBewly 是一個針對 BiliBili 的瀏覽器擴充功能，旨在透過重�
 
 該專案使用 [vitesse-webext](https://github.com/antfu/vitesse-webext) 範例進行開發。如果沒有此範例，可能無法開發出此專案。
 
+## 🔨 Build (Firefox)
+
+Please make sure you have [Node.js](https://nodejs.org/) and [pnpm](https://pnpm.io/) installed locally, and it is recommended to use [Visual Studio Code](https://code.visualstudio.com/) for development.
+
+1. To build the extension, run
+
+```bash
+# Install dependencies
+pnpm install
+
+pnpm build-firefox
+```
+
+2. Load the generated `extension-firefox/` folder in the browser, The extension will then take effect on [www.bilibili.com](https://www.bilibili.com).
+
+[Chrome & Edge](/docs/CONTRIBUTING.md#building-chrome-or-edge)
+
 ## ⬇️ 安裝
 
 ### 線上安裝
 
-即使您使用的是 Edge 瀏覽器，我們仍然強烈建議您從 Chrome 線上應用程式商店安裝。在審核速度上，Chrome 線上應用程式商店通常比 Edge 的附加元件來得快一些。
+> [!Caution]
+> 即使您使用的是 Edge 瀏覽器，我們仍然強烈建議您從 Chrome 線上應用程式商店安裝。在審核速度上，Chrome 線上應用程式商店比 Edge 的附加元件快很多。
+>
+> 此外，BewlyBewly 的 Chrome Web Store 版本將更快地解決和修復關鍵性的錯誤。
 
 - Chrome: <https://chromewebstore.google.com/detail/bewlybewly/bbbiejemhfihiooipfcjmjmbfdmobobp>
-- Edge: <https://microsoftedge.microsoft.com/addons/detail/bewlybewly/kceadhehfjdiakpiphpjgolbgehjdmja>
-- Firefox: <https://addons.mozilla.org/lt/firefox/addon/bewlybewly/>
+- Edge: <https://chromewebstore.google.com/detail/bewlybewly/bbbiejemhfihiooipfcjmjmbfdmobobp>
+- Firefox: <https://addons.mozilla.org/zh-TW/firefox/addon/bewlybewly/>
+
+#### 給 Firefox 使用者的提示
+
+> [!WARNING]
+> 使用 Firefox 瀏覽器時，請記得啟用下圖所示的所有權限，以便正常使用 BewlyBewly
+
+<br/> <img width="655" alt="enable all bewlybewly permissions on firefox" src="https://github.com/hakadao/BewlyBewly/assets/33394391/9566aed8-040a-4435-a2ec-c61117f8e429">
 
 ### 離線安裝
 
@@ -62,74 +89,13 @@ BewlyBewly 是一個針對 BiliBili 的瀏覽器擴充功能，旨在透過重�
 
 </details>
 
-## 🔧 開發與建置專案
-
-請使用 dev 分支進行開發
-
-### Chrome or Edge browser
-
-<details>
-  <summary>Chrome or Edge browser</summary>
-
-#### 開發 (Chrome or Edge)
-
-```bash
-pnpm dev
-```
-
-然後在瀏覽器中使用 `extension/` 資料夾載入此擴充功能。
-每次修改後，您需要點選 [Extensions Reloader](https://chromewebstore.google.com/detail/extensions-reloader/fimgfedafeadlieiabdeeaodndnlbhid) 按鈕，然後重新整理頁面，以確保更改生效。
-
-#### 建置 (Chrome or Edge)
-
-建置此擴充功能，需要執行以下指令
-
-```bash
-pnpm build
-```
-
-然後打包 `extension` 下的檔案
-
-</details>
-
-### Firefox browser
-
-<details>
-  <summary>Firefox browser</summary>
-
-#### 開發 (Firefox)
-
-```bash
-pnpm dev-firefox
-```
-
-然後在瀏覽器中使用 `extension-firefox/` 資料夾載入此擴充功能。
-每次修改後，您需要點選 [Extensions Reloader](https://chromewebstore.google.com/detail/extensions-reloader/fimgfedafeadlieiabdeeaodndnlbhid) 按鈕，然後重新整理頁面，以確保更改生效。
-
-#### 建置 (Firefox)
-
-建置此擴充功能，需要執行以下指令
-
-```bash
-pnpm build-firefox
-```
-
-然後打包 `extension-firefox` 下的檔案
-
-</details>
-
 ## 🤝 貢獻
 
-### 關於分支
+詳情 [CONTRIBUTION.md](docs/CONTRIBUTING.md)
 
-- **Main**: 此分支設計用於僅涉及文件檔案（如 README 檔案）的更改，不更改程式碼或其功能。
-- **Dev**: 使用此分支進行新功能的開發、改進效能或對語系檔（i18n）的修改。
-- **Bugfixes**: 此分支專門用於修正 main 分支中出現的錯誤。
+### 貢獻者
 
-### I18n
-
-- 在進行翻譯時，如果你遇到一種你不熟悉的語言，你可以使用另一種你已經翻譯過的語言來翻譯，並在 PR 中指出你無法翻譯的那個語言。
-- **請手動維護 i18n 國際化語系檔！！！** 請勿使用 `i18n Ally` 或其他擴充套件來進行維護。 我知道你可能會感到困惑，或者可能不喜歡這樣做，但使用 `i18n Ally` 進行維護後，將不確定翻譯放在哪裏，或刪除程式碼註解。
+![Contributors](https://contrib.rocks/image?repo=hakadao/BewlyBewly)
 
 ## ❤️ 鳴謝
 

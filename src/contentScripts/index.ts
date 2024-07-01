@@ -1,14 +1,16 @@
+import 'uno.css'
+import '~/styles'
+
 import { createApp } from 'vue'
 
-import 'uno.css'
-import '~/styles/index.ts'
-import App from './views/App.vue'
-import { setupApp } from '~/logic/common-setup'
-import { SVG_ICONS } from '~/utils/svgIcons'
-import { injectCSS, isHomePage } from '~/utils/main'
+import { useDark } from '~/composables/useDark'
 import { settings } from '~/logic'
-
+import { setupApp } from '~/logic/common-setup'
 import { runWhenIdle } from '~/utils/lazyLoad'
+import { injectCSS, isHomePage } from '~/utils/main'
+import { SVG_ICONS } from '~/utils/svgIcons'
+
+import App from './views/App.vue'
 
 const isFirefox: boolean = /Firefox/i.test(navigator.userAgent)
 
@@ -33,53 +35,51 @@ function isSupportedPages() {
     || /https?:\/\/www\.bilibili\.com\/\?bvid=.*$/.test(currentUrl)
 
     // video page
-    || /https?:\/\/(www.)?bilibili\.com\/(video|list)\/.*/.test(currentUrl)
+    || /https?:\/\/(?:www\.)?bilibili\.com\/(?:video|list)\/.*/.test(currentUrl)
     // anime playback & movie page
-    || /https?:\/\/(www\.)?bilibili\.com\/bangumi\/play\/.*/.test(currentUrl)
+    || /https?:\/\/(?:www\.)?bilibili\.com\/bangumi\/play\/.*/.test(currentUrl)
     // watch later playlist
-    || /https?:\/\/(www\.)?bilibili\.com\/list\/watchlater.*/.test(currentUrl)
+    || /https?:\/\/(?:www\.)?bilibili\.com\/list\/watchlater.*/.test(currentUrl)
     // favorite playlist
-    || /https?:\/\/(www\.)?bilibili\.com\/list\/ml.*/.test(currentUrl)
+    || /https?:\/\/(?:www\.)?bilibili\.com\/list\/ml.*/.test(currentUrl)
     // search page
     || /https?:\/\/search\.bilibili\.com\.*/.test(currentUrl)
     // moments
     || /https?:\/\/t\.bilibili\.com\.*/.test(currentUrl)
     // moment detail
-    || /https?:\/\/(www\.)?bilibili\.com\/opus\/.*/.test(currentUrl)
+    || /https?:\/\/(?:www\.)?bilibili\.com\/opus\/.*/.test(currentUrl)
     // history page
-    || /https?:\/\/(www\.)?bilibili\.com\/account\/history.*/.test(currentUrl)
+    || /https?:\/\/(?:www\.)?bilibili\.com\/account\/history.*/.test(currentUrl)
     // watcher later page
-    || /https?:\/\/(www\.)?bilibili\.com\/watchlater\/#\/list.*/.test(currentUrl)
+    || /https?:\/\/(?:www\.)?bilibili\.com\/watchlater\/#\/list.*/.test(currentUrl)
     // user space page
     || /https?:\/\/space\.bilibili\.com\.*/.test(currentUrl)
     // notifications page
     || /https?:\/\/message\.bilibili\.com\.*/.test(currentUrl)
     // bilibili channel page b站分区页面
-    || /https?:\/\/(www\.)?bilibili\.com\/v\/(?!popular).*/.test(currentUrl)
+    || /https?:\/\/(?:www\.)?bilibili\.com\/v\/(?!popular).*/.test(currentUrl)
     // anime page & chinese anime page
-    || /https?:\/\/(www\.)?bilibili\.com\/(anime|guochuang).*/.test(currentUrl)
+    || /https?:\/\/(?:www\.)?bilibili\.com\/(?:anime|guochuang).*/.test(currentUrl)
     // channel page e.g. tv shows, movie, variety shows, mooc page
-    || /https?:\/\/(www\.)?bilibili\.com\/(tv|movie|variety|mooc|documentary).*/.test(currentUrl)
+    || /https?:\/\/(?:www\.)?bilibili\.com\/(?:tv|movie|variety|mooc|documentary).*/.test(currentUrl)
     // article page
-    || /https?:\/\/(www\.)?bilibili\.com\/(read).*/.test(currentUrl)
+    // www.bilibili.com/read/pcpreview 是专栏浏览页, 因布局问题不做适配 #846
+    || /https?:\/\/(?:www\.)?bilibili\.com\/read\/(?!pcpreview).*/.test(currentUrl)
     // 404 page
-    || /^https?:\/\/(www\.)?bilibili\.com\/404.*$/.test(currentUrl)
-  )
+    || /^https?:\/\/(?:www\.)?bilibili\.com\/404.*$/.test(currentUrl)
+  ) {
     return true
-  else
+  }
+  else {
     return false
+  }
 }
 
 let beforeLoadedStyleEl: HTMLStyleElement | undefined
 
 if (isSupportedPages()) {
-  // Since using runWhenIdle does not instantly inject the app to the page, a style class cannot be injected immediately to the <html> tag
-  // We have to manually add a class to the <html> app to ensure that the transition effect is applied
-  if (
-    (settings.value.adaptToOtherPageStyles && settings.value.theme === 'dark')
-    || (settings.value.adaptToOtherPageStyles && window.matchMedia('(prefers-color-scheme: dark)').matches)
-  )
-    document.documentElement.classList.add('dark')
+  if (settings.value.adaptToOtherPageStyles)
+    useDark()
 
   if (settings.value.adaptToOtherPageStyles)
     document.documentElement.classList.add('bewly-design')
@@ -89,13 +89,13 @@ if (isSupportedPages()) {
 
 if (settings.value.adaptToOtherPageStyles && isHomePage()) {
   beforeLoadedStyleEl = injectCSS(`
-    html.dark.bewly-design {
-      background-color: hsl(230 12% 6%);
+    html.bewly-design {
+      background-color: var(--bew-bg);
+      transition: background-color 0.2s ease-in;
     }
 
     body {
-      opacity: 0;
-      background: none;
+      display: none;
     }
   `)
 
@@ -108,13 +108,21 @@ if (settings.value.adaptToOtherPageStyles && isHomePage()) {
 }
 
 if (isSupportedPages()) {
-  // remove the original top bar
+  // remove the original top bar and adjust the height of the top bar to match the bewly top bar
   injectCSS(`
     .bili-header .bili-header__bar,
     #internationalHeader,
     .link-navbar,
-    #home_nav {
+    #home_nav,
+    #biliMainHeader {
       visibility: hidden;
+      height: var(--bew-top-bar-height) !important;
+    }
+
+    /* some pages have a white bar at the top; changing the top margin fixes this problem */
+    .banner-wrapper,
+    .home-banner-wrapper {
+      margin-top: calc(-1 * var(--bew-top-bar-height)) !important;
     }
   `)
 }

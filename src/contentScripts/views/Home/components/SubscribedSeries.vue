@@ -1,8 +1,19 @@
 <script setup lang="ts">
 import type { Ref } from 'vue'
+
+import Button from '~/components/Button.vue'
+import Empty from '~/components/Empty.vue'
+import VideoCard from '~/components/VideoCard/VideoCard.vue'
+import { useApiClient } from '~/composables/api'
+import { useBewlyApp } from '~/composables/useAppProvider'
 import type { GridLayout } from '~/logic'
 import type { DataItem as MomentItem, MomentResult } from '~/models/moment/moment'
-import API from '~/background/msg.define'
+
+// https://github.com/starknt/BewlyBewly/blob/fad999c2e482095dc3840bb291af53d15ff44130/src/contentScripts/views/Home/components/ForYou.vue#L16
+interface VideoElement {
+  uniqueId: string
+  item?: MomentItem
+}
 
 const props = defineProps<{
   gridLayout: GridLayout
@@ -21,7 +32,9 @@ const gridValue = computed((): string => {
   return '~ cols-1 gap-4'
 })
 
-const momentList = reactive<MomentItem[]>([])
+const api = useApiClient()
+
+const videoList = ref<VideoElement[]>([])
 const isLoading = ref<boolean>(false)
 const needToLoginFirst = ref<boolean>(false)
 const containerRef = ref<HTMLElement>() as Ref<HTMLElement>
@@ -29,7 +42,7 @@ const offset = ref<string>('')
 const updateBaseline = ref<string>('')
 const noMoreContent = ref<boolean>(false)
 const noMoreContentWarning = ref<boolean>(false)
-const { handleReachBottom, handlePageRefresh } = useBewlyApp()
+const { handleReachBottom, handlePageRefresh, haveScrollbar } = useBewlyApp()
 
 onMounted(async () => {
   initData()
@@ -43,7 +56,7 @@ onActivated(() => {
 async function initData() {
   offset.value = ''
   updateBaseline.value = ''
-  momentList.length = 0
+  videoList.value.length = 0
   noMoreContent.value = false
   noMoreContentWarning.value = false
 
@@ -51,8 +64,17 @@ async function initData() {
 }
 
 async function getData() {
-  for (let i = 0; i < 3; i++)
-    await getFollowedUsersVideos()
+  emit('beforeLoading')
+  isLoading.value = true
+
+  try {
+    for (let i = 0; i < 3; i++)
+      await getFollowedUsersVideos()
+  }
+  finally {
+    isLoading.value = false
+    emit('afterLoading')
+  }
 }
 
 function initPageAction() {
@@ -83,13 +105,18 @@ async function getFollowedUsersVideos() {
     return
   }
 
-  emit('beforeLoading')
-  isLoading.value = true
   try {
-    const response: MomentResult = await browser.runtime.sendMessage({
-      contentScriptQuery: API.MOMENT.GET_MOMENTS,
+    let i = 0
+    // https://github.com/starknt/BewlyBewly/blob/fad999c2e482095dc3840bb291af53d15ff44130/src/contentScripts/views/Home/components/ForYou.vue#L208
+    const pendingVideos: VideoElement[] = Array.from({ length: 30 }, () => ({
+      uniqueId: `unique-id-${(videoList.value.length || 0) + i++})}`,
+    } satisfies VideoElement))
+    let lastVideoListLength = videoList.value.length
+    videoList.value.push(...pendingVideos)
+
+    const response: MomentResult = await api.moment.getMoments({
       type: 'pgc',
-      offset: offset.value,
+      offset: Number(offset.value),
       update_baseline: updateBaseline.value,
     })
 
@@ -110,12 +137,20 @@ async function getFollowedUsersVideos() {
       })
 
       // when videoList has length property, it means it is the first time to load
-      if (!momentList.length) {
-        Object.assign(momentList, resData)
+      if (!videoList.value.length) {
+        videoList.value = resData.map(item => ({ uniqueId: `${item.id_str}`, item }))
       }
       else {
-        // else we concat the new data to the old data
-        Object.assign(momentList, momentList.concat(resData))
+        resData.forEach((item) => {
+          videoList.value[lastVideoListLength++] = {
+            uniqueId: `${item.id_str}`,
+            item,
+          }
+        })
+      }
+
+      if (!haveScrollbar() && !noMoreContent.value) {
+        getFollowedUsersVideos()
       }
     }
     else if (response.code === -101) {
@@ -123,8 +158,7 @@ async function getFollowedUsersVideos() {
     }
   }
   finally {
-    isLoading.value = false
-    emit('afterLoading')
+    videoList.value = videoList.value.filter(video => video.item)
   }
 }
 
@@ -154,38 +188,29 @@ defineExpose({ initData })
       :grid="gridValue"
     >
       <VideoCard
-        v-for="moment in momentList"
-        :id="moment.modules.module_author.mid"
-        :key="moment.modules.module_author.mid"
-        :top-right-content="false"
-        :title="`${moment.modules.module_dynamic.major.pgc?.title}`"
-        :cover="`${moment.modules.module_dynamic.major.pgc?.cover}`"
-        :author="moment.modules.module_author.name"
-        :author-face="moment.modules.module_author.face"
-        :mid="moment.modules.module_author.mid"
-        :author-url="moment.modules.module_author.jump_url"
-        :view-str="moment.modules.module_dynamic.major.pgc?.stat.play"
-        :danmaku-str="moment.modules.module_dynamic.major.pgc?.stat.danmaku"
-        :capsule-text="moment.modules.module_author.pub_time"
-        :epid="moment.modules.module_dynamic.major.pgc?.epid"
+        v-for="video in videoList"
+        :key="video.uniqueId"
+        :skeleton="!video.item"
+        :video="video.item ? {
+          id: video.item.modules.module_author.mid,
+          title: `${video.item.modules.module_dynamic.major.pgc?.title}`,
+          cover: `${video.item.modules.module_dynamic.major.pgc?.cover}`,
+          author: video.item.modules.module_author.name,
+          authorFace: video.item.modules.module_author.face,
+          mid: video.item.modules.module_author.mid,
+          authorUrl: video.item.modules.module_author.jump_url,
+          viewStr: video.item.modules.module_dynamic.major.pgc?.stat.play,
+          danmakuStr: video.item.modules.module_dynamic.major.pgc?.stat.danmaku,
+          capsuleText: video.item.modules.module_author.pub_time,
+          epid: video.item.modules.module_dynamic.major.pgc?.epid,
+        } : undefined"
+        :show-watcher-later="false"
         :horizontal="gridLayout !== 'adaptive'"
       />
-
-      <!-- skeleton -->
-      <template v-if="isLoading">
-        <VideoCardSkeleton
-          v-for="item in 30" :key="item"
-          :horizontal="gridLayout !== 'adaptive'"
-        />
-      </template>
     </div>
 
     <!-- no more content -->
     <Empty v-if="noMoreContentWarning" class="pb-4" :description="$t('common.no_more_content')" />
-
-    <Transition name="fade">
-      <Loading v-if="isLoading" />
-    </Transition>
   </div>
 </template>
 

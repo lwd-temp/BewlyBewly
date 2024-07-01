@@ -51,7 +51,7 @@ interface API {
 }
 // 重载API 可以为函数
 type APIFunction = (message: Message, sender?: any, sendResponse?: Function) => any
-type APIType = API | APIFunction
+export type APIType = API | APIFunction
 interface APIMAP {
   [key: string]: APIType
 }
@@ -61,7 +61,7 @@ function apiListenerFactory(API_MAP: APIMAP) {
     const contentScriptQuery = message.contentScriptQuery
     // 检测是否有contentScriptQuery
     if (!contentScriptQuery || !API_MAP[contentScriptQuery])
-      return console.error('no contentScriptQuery')
+      return console.error(`Cannot find this contentScriptQuery: ${contentScriptQuery}`)
     if (API_MAP[contentScriptQuery] instanceof Function)
       return (API_MAP[contentScriptQuery] as APIFunction)(message, sender, sendResponse)
 
@@ -119,14 +119,14 @@ function apiListenerFactory(API_MAP: APIMAP) {
 }
 
 export {
-  FetchAfterHandler,
-  toJsonHandler,
-  toData,
-  sendResponseHandler,
+  type _FETCH,
   AHS,
-  Message,
-  _FETCH,
-  API,
-  APIMAP,
+  type API,
   apiListenerFactory,
+  type APIMAP,
+  type FetchAfterHandler,
+  type Message,
+  sendResponseHandler,
+  toData,
+  toJsonHandler,
 }

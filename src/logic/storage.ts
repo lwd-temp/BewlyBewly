@@ -1,6 +1,7 @@
 import { useStorageLocal } from '~/composables/useStorageLocal'
-import type { AppPage } from '~/enums/appEnums'
+import type { wallpaperItem } from '~/constants/imgs'
 import type { HomeSubPage } from '~/contentScripts/views/Home/types'
+import type { AppPage } from '~/enums/appEnums'
 
 // TODO: refactor: implement storage functionality using pinia + useStorageLocal()
 
@@ -9,8 +10,10 @@ export const accessKey = useStorageLocal('accessKey', '')
 
 export interface Settings {
   language: string
+  enableGridLayoutSwitcher: boolean
   enableHorizontalScrolling: boolean
   openLinkInCurrentTab: boolean
+  enableVideoPreview: boolean
   enableVideoCtrlBarOnVideoCard: boolean
   hoverVideoCardDelayed: boolean
   autoHideTopBar: boolean
@@ -21,6 +24,8 @@ export interface Settings {
   dockPosition: 'left' | 'right' | 'bottom'
   autoHideDock: boolean
   dockItemVisibilityList: { page: AppPage, visible: boolean }[]
+  disableLightDarkModeSwitcherOnDock: boolean
+  moveBackToTopOrRefreshButtonToDock: boolean
 
   theme: 'light' | 'dark' | 'auto'
   themeColor: string
@@ -29,6 +34,7 @@ export interface Settings {
   enableWallpaperMasking: boolean
   wallpaperMaskOpacity: number
   wallpaperBlurIntensity: number
+  locallyUploadedWallpaper: wallpaperItem | null
 
   searchPageDarkenOnSearchFocus: boolean
   searchPageBlurredOnSearchFocus: boolean
@@ -44,7 +50,13 @@ export interface Settings {
   searchPageWallpaperBlurIntensity: number
 
   recommendationMode: 'web' | 'app'
+  // filter setting
+  enableFilterByViewCount: boolean
+  filterByViewCount: number
+  enableFilterByDuration: boolean
+  filterByDuration: number
   homePageTabVisibilityList: { page: HomeSubPage, visible: boolean }[]
+  alwaysShowTabsOnHomePage: boolean
   useSearchPageModeOnHomePage: boolean
   searchPageModeWallpaperFixed: boolean
   alwaysShowTheTopBarLogoOnSearchPageMode: boolean
@@ -55,8 +67,10 @@ export interface Settings {
 }
 export const settings = useStorageLocal('settings', ref<Settings>({
   language: '',
+  enableGridLayoutSwitcher: true,
   enableHorizontalScrolling: false,
   openLinkInCurrentTab: false,
+  enableVideoPreview: true,
   enableVideoCtrlBarOnVideoCard: false,
   hoverVideoCardDelayed: false,
   autoHideTopBar: false,
@@ -67,14 +81,17 @@ export const settings = useStorageLocal('settings', ref<Settings>({
   disableFrostedGlass: false,
   reduceFrostedGlassBlur: false,
   dockItemVisibilityList: [],
+  disableLightDarkModeSwitcherOnDock: false,
+  moveBackToTopOrRefreshButtonToDock: false,
 
   theme: 'auto',
   themeColor: '#00a1d6',
   wallpaperMode: 'buildIn',
   wallpaper: '',
   enableWallpaperMasking: false,
-  wallpaperMaskOpacity: 0,
+  wallpaperMaskOpacity: 80,
   wallpaperBlurIntensity: 0,
+  locallyUploadedWallpaper: null,
 
   searchPageDarkenOnSearchFocus: true,
   searchPageBlurredOnSearchFocus: false,
@@ -86,11 +103,18 @@ export const settings = useStorageLocal('settings', ref<Settings>({
   searchPageWallpaperMode: 'buildIn',
   searchPageWallpaper: '',
   searchPageEnableWallpaperMasking: false,
-  searchPageWallpaperMaskOpacity: 0.6,
+  searchPageWallpaperMaskOpacity: 0,
   searchPageWallpaperBlurIntensity: 0,
 
   recommendationMode: 'web',
+  // filter setting
+  enableFilterByViewCount: false,
+  filterByViewCount: 10000,
+  enableFilterByDuration: false,
+  filterByDuration: 3600,
+
   homePageTabVisibilityList: [],
+  alwaysShowTabsOnHomePage: false,
   useSearchPageModeOnHomePage: false,
   searchPageModeWallpaperFixed: false,
   alwaysShowTheTopBarLogoOnSearchPageMode: false,

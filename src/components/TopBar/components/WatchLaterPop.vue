@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
-import { calcCurrentTime } from '~/utils/dataFormatter'
-import type { List as VideoItem, WatchLaterResult } from '~/models/video/watchLater'
-import { isHomePage, removeHttpFromUrl } from '~/utils/main'
-import API from '~/background/msg.define'
 
+import Empty from '~/components/Empty.vue'
+import Loading from '~/components/Loading.vue'
+import Progress from '~/components/Progress.vue'
+import { useApiClient } from '~/composables/api'
+import type { List as VideoItem, WatchLaterResult } from '~/models/video/watchLater'
+import { calcCurrentTime } from '~/utils/dataFormatter'
+import { isHomePage, removeHttpFromUrl } from '~/utils/main'
+
+const api = useApiClient()
 const watchLaterList = reactive<VideoItem[]>([])
 const isLoading = ref<boolean>()
-
 const viewAllUrl = computed((): string => {
   return 'https://www.bilibili.com/watchlater/#/list'
 })
@@ -35,10 +39,7 @@ function getAllWatchLaterList() {
   isLoading.value = true
   watchLaterList.length = 0
 
-  browser.runtime
-    .sendMessage({
-      contentScriptQuery: API.WATCHLATER.GET_ALL_WATCHLATER_LIST,
-    })
+  api.watchlater.getAllWatchLaterList()
     .then((res: WatchLaterResult) => {
       if (res.code === 0)
         Object.assign(watchLaterList, res.data.list)
@@ -50,12 +51,14 @@ function getAllWatchLaterList() {
 
 <template>
   <div
+    style="backdrop-filter: var(--bew-filter-glass-1);"
+    bg="$bew-elevated"
     w="380px"
-    shadow="$bew-shadow-2"
-    bg="$bew-elevated-solid-1"
     rounded="$bew-radius"
     pos="relative"
     of="hidden"
+    shadow="[var(--bew-shadow-edge-glow-1),var(--bew-shadow-3)]"
+    border="1 $bew-border-color"
   >
     <!-- top bar -->
     <header
@@ -65,7 +68,7 @@ function getAllWatchLaterList() {
       p="y-4 x-6"
       pos="fixed top-0 left-0"
       w="full"
-      bg="$bew-elevated-1"
+      bg="$bew-elevated"
       z="2"
       border="!rounded-t-$bew-radius"
     >
@@ -103,17 +106,17 @@ function getAllWatchLaterList() {
         <Loading
           v-if="isLoading && watchLaterList.length === 0"
           h="full"
-          flex="~"
-          items="center"
+          flex="~ items-center"
         />
 
         <!-- empty -->
         <Empty
           v-if="!isLoading && watchLaterList.length === 0"
           pos="absolute top-0 left-0"
-          bg="$bew-content-1"
+          bg="$bew-content"
           z="0" w="full" h="full"
           flex="~ items-center"
+          rounded="$bew-radius"
         />
 
         <!-- watchlater -->
@@ -195,7 +198,7 @@ function getAllWatchLaterList() {
 
         <!-- loading -->
         <Transition name="fade">
-          <loading v-if="isLoading && watchLaterList.length !== 0" m="-t-4" />
+          <Loading v-if="isLoading && watchLaterList.length !== 0" m="-t-4" />
         </Transition>
       </div>
     </main>
@@ -204,20 +207,20 @@ function getAllWatchLaterList() {
 
 <style lang="scss" scoped>
 .tab {
-  --at-apply: relative text-$bew-text-2;
+  --uno: "relative text-$bew-text-2";
 
   &::after {
-    --at-apply: absolute bottom-0 left-0 w-full h-12px bg-$bew-theme-color
-      opacity-0 transform scale-x-0 -z-1 transition-all duration-300;
-    content: '';
+    --uno: "absolute bottom-0 left-0 w-full h-12px bg-$bew-theme-color opacity-0 transform scale-x-0 -z-1";
+    --uno: "transition-all duration-300";
+    content: "";
   }
 }
 
 .tab-selected {
-  --at-apply: font-bold text-$bew-text-1;
+  --uno: "font-bold text-$bew-text-1";
 
   &::after {
-    --at-apply: scale-x-80 opacity-40;
+    --uno: "scale-x-80 opacity-40";
   }
 }
 </style>

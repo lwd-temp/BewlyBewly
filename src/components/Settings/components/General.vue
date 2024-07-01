@@ -1,9 +1,15 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
 import draggable from 'vuedraggable'
-import { Icon } from '@iconify/vue'
+
+import Button from '~/components/Button.vue'
+import Radio from '~/components/Radio.vue'
+import Select from '~/components/Select.vue'
 import { settings } from '~/logic'
 import { useMainStore } from '~/stores/mainStore'
+
+import SettingsItem from './SettingsItem.vue'
+import SettingsItemGroup from './SettingsItemGroup.vue'
 
 const mainStore = useMainStore()
 const { t, locale } = useI18n()
@@ -104,6 +110,10 @@ function handleToggleDockItem(dockItem: any) {
         />
       </SettingsItem>
 
+      <SettingsItem :title="$t('settings.enable_grid_layout_switcher')">
+        <Radio v-model="settings.enableGridLayoutSwitcher" />
+      </SettingsItem>
+
       <SettingsItem :title="$t('settings.enable_horizontal_scrolling')" :desc="$t('settings.enable_horizontal_scrolling_desc')">
         <Radio v-model="settings.enableHorizontalScrolling" />
       </SettingsItem>
@@ -111,12 +121,20 @@ function handleToggleDockItem(dockItem: any) {
       <!-- <SettingsItem title="Open link in current tab">
         <Radio v-model="settings.openLinkInCurrentTab" />
       </SettingsItem> -->
-      <SettingsItem :title="$t('settings.enable_video_ctrl_bar_on_video_card')">
-        <Radio v-model="settings.enableVideoCtrlBarOnVideoCard" />
+    </SettingsItemGroup>
+
+    <SettingsItemGroup :title="$t('settings.group_video_card')">
+      <SettingsItem :title="$t('settings.enable_video_preview')">
+        <Radio v-model="settings.enableVideoPreview" />
       </SettingsItem>
-      <SettingsItem :title="$t('settings.hover_video_card_delayed')">
-        <Radio v-model="settings.hoverVideoCardDelayed" />
-      </SettingsItem>
+      <template v-if="settings.enableVideoPreview">
+        <SettingsItem :title="$t('settings.enable_video_ctrl_bar_on_video_card')">
+          <Radio v-model="settings.enableVideoCtrlBarOnVideoCard" />
+        </SettingsItem>
+        <SettingsItem :title="$t('settings.hover_video_card_delayed')">
+          <Radio v-model="settings.hoverVideoCardDelayed" />
+        </SettingsItem>
+      </template>
     </SettingsItemGroup>
 
     <SettingsItemGroup>
@@ -163,7 +181,7 @@ function handleToggleDockItem(dockItem: any) {
             {{ $t('settings.dock_content_adjustment') }}
             <Button size="small" type="secondary" @click="resetDockContent">
               <template #left>
-                <mingcute:back-line />
+                <div i-mingcute:back-line />
               </template>
               {{ $t('common.reset') }}
             </Button>
@@ -184,11 +202,17 @@ function handleToggleDockItem(dockItem: any) {
               }"
               @click="handleToggleDockItem(element)"
             >
-              <Icon :icon="pageOptions.find((page:any) => (page.value === element.page))?.icon as string" />
+              <div :class="pageOptions.find((page:any) => (page.value === element.page))?.icon as string" />
               {{ pageOptions.find(option => option.value === element.page)?.label }}
             </div>
           </template>
         </draggable>
+      </SettingsItem>
+      <SettingsItem :title="$t('settings.disable_light_dark_mode_switcher')">
+        <Radio v-model="settings.disableLightDarkModeSwitcherOnDock" />
+      </SettingsItem>
+      <SettingsItem :title="$t('settings.move_back_to_top_and_refresh_to_dock')">
+        <Radio v-model="settings.moveBackToTopOrRefreshButtonToDock" />
       </SettingsItem>
     </SettingsItemGroup>
   </div>

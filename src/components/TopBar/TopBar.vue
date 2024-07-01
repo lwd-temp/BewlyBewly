@@ -1,17 +1,26 @@
 <script setup lang="ts">
+import { useMouseInElement } from '@vueuse/core'
 import type { Ref, UnwrapNestedRefs } from 'vue'
-import { onMounted, watch } from 'vue'
-import type { UnReadDm, UnReadMessage, UserInfo } from './types'
-import { updateInterval } from './notify'
 
-// import NotificationsPop from './components/NotificationsPop.vue'
-// import MomentsPop from './components/MomentsPop.vue'
-// import FavoritesPop from './components/FavoritesPop.vue'
-// import HistoryPop from './components/HistoryPop.vue'
-import { getUserID, isHomePage } from '~/utils/main'
+import { useApiClient } from '~/composables/api'
+import { useBewlyApp } from '~/composables/useAppProvider'
+import { useDelayedHover } from '~/composables/useDelayedHover'
 import { settings } from '~/logic'
+import { getUserID, isHomePage } from '~/utils/main'
 import emitter from '~/utils/mitt'
-import API from '~/background/msg.define'
+
+import SearchBar from '../SearchBar/SearchBar.vue'
+import ChannelsPop from './components/ChannelsPop.vue'
+import FavoritesPop from './components/FavoritesPop.vue'
+import HistoryPop from './components/HistoryPop.vue'
+import MomentsPop from './components/MomentsPop.vue'
+import MorePop from './components/MorePop.vue'
+import NotificationsPop from './components/NotificationsPop.vue'
+import UploadPop from './components/UploadPop.vue'
+import UserPanelPop from './components/UserPanelPop.vue'
+import WatchLaterPop from './components/WatchLaterPop.vue'
+import { updateInterval } from './notify'
+import type { UnReadDm, UnReadMessage, UserInfo } from './types'
 
 // import { useTopBarStore } from '~/stores/topBarStore'
 
@@ -40,21 +49,34 @@ const mid = getUserID() || ''
 const userInfo = reactive<UserInfo | NonNullable<unknown>>({}) as UnwrapNestedRefs<UserInfo>
 
 const hideTopBar = ref<boolean>(false)
-const hoveringTopBar = ref<boolean>(false)
+const headerTarget = ref(null)
+const { isOutside: isOutsideTopBar } = useMouseInElement(headerTarget)
 
-const showChannelsPop = ref<boolean>(false)
-const showUserPanelPop = ref<boolean>(false)
-const showNotificationsPop = ref<boolean>(false)
-const showMomentsPop = ref<boolean>(false)
-const showFavoritesPop = ref<boolean>(false)
-const showUploadPop = ref<boolean>(false)
-const showHistoryPop = ref<boolean>(false)
-const showWatchLaterPop = ref<boolean>(false)
-const showMorePop = ref<boolean>(false)
+// const showChannelsPop = ref<boolean>(false)
+// const showUserPanelPop = ref<boolean>(false)
+// const showNotificationsPop = ref<boolean>(false)
+// const showMomentsPop = ref<boolean>(false)
+// const showFavoritesPop = ref<boolean>(false)
+// const showHistoryPop = ref<boolean>(false)
+// const showWatchLaterPop = ref<boolean>(false)
+// const showUploadPop = ref<boolean>(false)
+// const showMorePop = ref<boolean>(false)
 
-const momentsPopKey = ref<string>(`momentsPop[${Number(new Date())}]`)
-
-const isLogin = ref<boolean>(false)
+const popupVisible = reactive({
+  channels: false,
+  userPanel: false,
+  notifications: false,
+  moments: false,
+  favorites: false,
+  history: false,
+  watchLater: false,
+  upload: false,
+  more: false,
+})
+const api = useApiClient()
+// initially, assume the user is logged in cuz data retrieval is slow, which may show the login
+// button even after login. if the user is not logged in, the login button will show up later
+const isLogin = ref<boolean>(true)
 const unReadMessage = reactive<UnReadMessage | NonNullable<unknown>>(
   {},
 ) as UnwrapNestedRefs<UnReadMessage>
@@ -66,49 +88,121 @@ const logo = ref<HTMLElement>() as Ref<HTMLElement>
 const avatarImg = ref<HTMLImageElement>() as Ref<HTMLImageElement>
 const avatarShadow = ref<HTMLImageElement>() as Ref<HTMLImageElement>
 const favoritesPopRef = ref<any>()
+const momentsPopRef = ref()
 
 const scrollTop = ref<number>(0)
 const oldScrollTop = ref<number>(0)
 
+function closeAllTopBarPopup(exceptionKey?: keyof typeof popupVisible) {
+  Object.keys(popupVisible).forEach((key) => {
+    if (key !== exceptionKey)
+      popupVisible[key as keyof typeof popupVisible] = false
+  })
+}
+
+const rightSideInactive = computed(() => {
+  let isInactive = false
+  Object.entries(popupVisible).forEach(([key, value]) => {
+    if (value && key !== 'userPanel') {
+      isInactive = true
+    }
+  })
+  return isInactive
+})
+
+// Channels
+const channels = useDelayedHover({
+  beforeEnter: () => closeAllTopBarPopup('channels'),
+  enter: () => {
+    popupVisible.channels = true
+  },
+  leave: () => {
+    popupVisible.channels = false
+  },
+})
+
 // Avatar
 const avatar = useDelayedHover({
-  enter: () => openUserPanel(),
-  leave: () => closeUserPanel(),
+  beforeEnter: () => closeAllTopBarPopup('userPanel'),
+  enter: () => {
+    popupVisible.userPanel = true
+  },
+  beforeLeave: () => {
+    popupVisible.userPanel = false
+  },
+  leave: () => {
+    popupVisible.userPanel = false
+  },
 })
+
 // Notifications
 const notifications = useDelayedHover({
-  enter: () => showNotificationsPop.value = true,
-  leave: () => showNotificationsPop.value = false,
+  beforeEnter: () => closeAllTopBarPopup('notifications'),
+  enter: () => {
+    popupVisible.notifications = true
+  },
+  leave: () => {
+    popupVisible.notifications = false
+  },
 })
 // Moments
 const moments = useDelayedHover({
-  enter: () => showMomentsPop.value = true,
-  leave: () => showMomentsPop.value = false,
+  beforeEnter: () => closeAllTopBarPopup('moments'),
+  enter: () => {
+    popupVisible.moments = true
+    momentsPopRef.value && momentsPopRef.value.checkIfHasNewMomentsThenUpdateMoments()
+  },
+  leave: () => {
+    popupVisible.moments = false
+  },
 })
 // Favorites
 const favorites = useDelayedHover({
-  enter: () => showFavoritesPop.value = true,
-  leave: () => showFavoritesPop.value = false,
-})
-// Upload
-const upload = useDelayedHover({
-  enter: () => showUploadPop.value = true,
-  leave: () => showUploadPop.value = false,
+  beforeEnter: () => closeAllTopBarPopup('favorites'),
+  enter: () => {
+    popupVisible.favorites = true
+  },
+  leave: () => {
+    popupVisible.favorites = false
+  },
 })
 // History
 const history = useDelayedHover({
-  enter: () => showHistoryPop.value = true,
-  leave: () => showHistoryPop.value = false,
+  beforeEnter: () => closeAllTopBarPopup('history'),
+  enter: () => {
+    popupVisible.history = true
+  },
+  leave: () => {
+    popupVisible.history = false
+  },
 })
 // Watch Later
 const watchLater = useDelayedHover({
-  enter: () => showWatchLaterPop.value = true,
-  leave: () => showWatchLaterPop.value = false,
+  beforeEnter: () => closeAllTopBarPopup('watchLater'),
+  enter: () => {
+    popupVisible.watchLater = true
+  },
+  leave: () => {
+    popupVisible.watchLater = false
+  },
+})
+// Upload
+const upload = useDelayedHover({
+  beforeEnter: () => closeAllTopBarPopup('upload'),
+  enter: () => {
+    popupVisible.upload = true
+  },
+  leave: () => {
+    popupVisible.upload = false
+  },
 })
 // More
 const more = useDelayedHover({
-  enter: () => showMorePop.value = true,
-  leave: () => showMorePop.value = false,
+  beforeEnter: () => closeAllTopBarPopup(),
+  enter: () => {
+    popupVisible.more = true
+  },
+  leave: () => popupVisible.more = false,
 })
 
 watch(() => settings.value.autoHideTopBar, (newVal) => {
@@ -117,18 +211,24 @@ watch(() => settings.value.autoHideTopBar, (newVal) => {
 })
 
 watch(
-  showNotificationsPop,
+  () => popupVisible.notifications,
   (newVal, oldVal) => {
+    // Stop loading new message counts on the message page, because it resets to 0 when the
+    // users reads the messages on this page
+    if (oldVal === undefined && /https?:\/\/message.bilibili.com.*$/.test(location.href))
+      return
+
     if (newVal === oldVal)
       return
 
     if (!newVal)
       getUnreadMessageCount()
   },
+  { immediate: true },
 )
 
 watch(
-  showMomentsPop,
+  () => popupVisible.moments,
   async (newVal, oldVal) => {
     if (newVal === oldVal)
       return
@@ -136,9 +236,10 @@ watch(
     if (!newVal)
       await getTopBarNewMomentsCount()
   },
+  { immediate: true },
 )
 
-watch(showFavoritesPop, (newVal, oldVal) => {
+watch(() => popupVisible.favorites, (newVal, oldVal) => {
   if (newVal === oldVal)
     return
   if (newVal) {
@@ -166,8 +267,6 @@ onBeforeMount(() => {
 
 async function initData() {
   await getUserInfo()
-  getUnreadMessageCount()
-  getTopBarNewMomentsCount()
 
   // automatically update notifications and moments count
   setInterval(() => {
@@ -188,7 +287,7 @@ function handleScroll() {
   if (scrollTop.value === 0)
     toggleTopBarVisible(true)
 
-  if (settings.value.autoHideTopBar && !hoveringTopBar.value && scrollTop.value !== 0) {
+  if (settings.value.autoHideTopBar && isOutsideTopBar && scrollTop.value !== 0) {
     if (scrollTop.value > oldScrollTop.value)
       toggleTopBarVisible(false)
 
@@ -199,34 +298,9 @@ function handleScroll() {
   oldScrollTop.value = scrollTop.value
 }
 
-function showLogoMenuDropdown() {
-  logo.value.classList.add('activated')
-  showChannelsPop.value = true
-}
-
-function closeLogoMenuDropdown() {
-  logo.value.classList.remove('activated')
-  showChannelsPop.value = false
-}
-
-function openUserPanel() {
-  showUserPanelPop.value = true
-  avatarImg.value.classList.add('hover')
-  avatarShadow.value.classList.add('hover')
-}
-
-function closeUserPanel() {
-  showUserPanelPop.value = false
-  avatarImg.value.classList.remove('hover')
-  avatarShadow.value.classList.remove('hover')
-}
-
 async function getUserInfo() {
   try {
-    const res = await browser.runtime
-      .sendMessage({
-        contentScriptQuery: API.USER.GET_USER_INFO,
-      })
+    const res = await api.user.getUserInfo()
 
     if (res.code === 0) {
       isLogin.value = true
@@ -247,52 +321,51 @@ async function getUnreadMessageCount() {
   if (!isLogin.value)
     return
 
-  unReadMessageCount.value = 0
+  let result = 0
 
   try {
     let res
-    res = await browser.runtime.sendMessage({
-      contentScriptQuery: 'getUnreadMsg',
-    })
+    res = await api.notification.getUnreadMsg()
     if (res.code === 0) {
       Object.assign(unReadMessage, res.data)
       Object.entries(unReadMessage).forEach(([key, value]) => {
-        if (key !== 'up')
-          unReadMessageCount.value += typeof value === 'number' ? value : 0
+        if (key !== 'up' && key !== 'recv_reply' && key !== 'recv_like') {
+          if (typeof value === 'number')
+            result += value
+        }
       })
     }
 
-    res = await browser.runtime.sendMessage({
-      contentScriptQuery: 'getUnreadDm',
-    })
+    res = await api.notification.getUnreadDm()
     if (res.code === 0) {
       Object.assign(unReadDm, res.data)
-      unReadMessageCount.value += unReadDm.follow_unread
+      if (typeof unReadDm.follow_unread === 'number')
+        result += unReadDm.follow_unread
     }
   }
   catch (error) {
-    unReadMessageCount.value = 0
     console.error(error)
+  }
+  finally {
+    unReadMessageCount.value = result
   }
 }
 
 async function getTopBarNewMomentsCount() {
-  if (!isLogin)
+  if (!isLogin.value)
     return
 
-  newMomentsCount.value = 0
+  let result = 0
 
   try {
-    const res = await browser.runtime.sendMessage({
-      contentScriptQuery: 'getTopBarNewMomentsCount',
-    })
-    newMomentsCount.value = res.data.update_info.item.count
-    // If moments count > 0 then refresh the key to get the new moments
-    if (newMomentsCount.value > 0)
-      momentsPopKey.value = `momentsPop[${Number(new Date())}]`
+    const res = await api.moment.getTopBarNewMomentsCount()
+    if (res.code === 0) {
+      if (typeof res.data.update_info.item.count === 'number')
+        result = res.data.update_info.item.count
+    }
   }
-  catch {
-    newMomentsCount.value = 0
+  finally {
+    newMomentsCount.value = result
   }
 }
 
@@ -309,54 +382,58 @@ defineExpose({
 
 <template>
   <header
+    ref="headerTarget"
     w="full" transition="all 300 ease-in-out"
     :class="{ hide: hideTopBar }"
-    @mouseenter="hoveringTopBar = true"
-    @mouseleave="hoveringTopBar = false"
   >
     <main
-      max-w="$bew-page-max-width" m-auto flex="~ justify-between items-center gap-4"
-      p="lg:x-20 md:x-16 x-14" h="70px"
+      max-w="$bew-page-max-width"
+      flex="~ justify-between items-center gap-4"
+      p="lg:x-20 md:x-16 x-14" m-auto
+      h="$bew-top-bar-height"
     >
       <!-- Top bar mask -->
       <div
         v-if="mask"
         style="
-          mask-image: linear-gradient(to bottom,  black 40%, transparent);
-          backdrop-filter:var(--bew-filter-glass-1)
+          mask-image: linear-gradient(to bottom,  black 20%, transparent);
         "
+        :style="{ backdropFilter: settings.disableFrostedGlass ? 'none' : 'blur(4px)' }"
         pos="absolute top-0 left-0" w-full h-80px
-        pointer-events-none
+        pointer-events-none transform-gpu
       />
       <Transition name="fade">
         <div
           v-if="mask"
           pos="absolute top-0 left-0" w-full h-80px
-          pointer-events-none opacity-70
+          pointer-events-none opacity-80
           :style="{
-            background: `linear-gradient(to bottom, ${(settings.wallpaper
-              || settings.useSearchPageModeOnHomePage && settings.searchPageWallpaper && settings.individuallySetSearchPageWallpaper) && isHomePage()
-              ? 'rgba(0,0,0,.6)' : 'var(--bew-bg)'}, transparent)`,
+            background: `linear-gradient(to bottom, ${(
+              settings.wallpaper
+              || settings.useSearchPageModeOnHomePage
+              && settings.searchPageWallpaper
+              && settings.individuallySetSearchPageWallpaper)
+              && isHomePage()
+              ? 'rgba(0,0,0,.6)' : `${isHomePage() ? 'var(--bew-homepage-bg)' : 'var(--bew-bg)'}`}, transparent)`,
           }"
         />
       </Transition>
 
       <div shrink-0 flex="inline xl:1 justify-center">
         <div
+          ref="channels"
           z-1 relative w-fit mr-auto
-          @mouseenter.self="showLogoMenuDropdown()"
-          @mouseleave.self="closeLogoMenuDropdown()"
         >
           <Transition name="slide-out">
             <a
-              v-if="showLogo"
+              v-show="showLogo"
               ref="logo" href="//www.bilibili.com"
               class="group logo"
-              style="backdrop-filter: var(--bew-filter-glass-1)"
-              flex items-center border="1 $bew-border-color"
-              rounded="50px" p="x-4" shadow="$bew-shadow-2" duration-300
-              bg="$bew-elevated-1 hover:$bew-theme-color dark-hover:white"
-              w-auto h-50px
+              :class="{ activated: popupVisible.channels }"
+              flex items-center border="1 transparent hover:$bew-border-color"
+              rounded="50px" p="x-4" ml--4 duration-300
+              bg="hover:$bew-theme-color dark-hover:white"
+              w-auto h-50px transform-gpu
             >
               <svg
                 t="1645466458357"
@@ -379,7 +456,7 @@ defineExpose({
 
           <Transition name="slide-in">
             <ChannelsPop
-              v-if="showChannelsPop"
+              v-show="popupVisible.channels"
               class="bew-popover"
               pos="!left-0 !top-70px"
               transform="!translate-x-0"
@@ -394,8 +471,8 @@ defineExpose({
           <SearchBar
             v-if="props.showSearchBar"
             style="
-              --b-search-bar-color: var(--bew-elevated-1);
-              --b-search-bar-hover: var(--bew-elevated-1-hover);
+              --b-search-bar-color: var(--bew-elevated);
+              --b-search-bar-hover: var(--bew-elevated-hover);
             "
           />
         </Transition>
@@ -404,71 +481,77 @@ defineExpose({
       <!-- right content -->
       <div
         class="right-side"
-        flex="inline xl:1 justify-center items-center"
+        flex="inline xl:1 justify-end items-center"
       >
+        <!-- Avatar -->
         <div
-          style="backdrop-filter: var(--bew-filter-glass-1)"
-          ml-auto flex h-55px p-2 bg="$bew-elevated-1"
-          text="$bew-text-1" border="1 $bew-border-color" rounded-full shadow="$bew-shadow-2"
+          v-if="isLogin"
+          ref="avatar"
+          class="avatar right-side-item"
+          shadow="$bew-shadow-2" rounded-full
+        >
+          <a
+            ref="avatarImg"
+            :href="`https://space.bilibili.com/${mid}`"
+            :target="isHomePage() ? '_blank' : '_self'"
+            class="avatar-img"
+            :class="{ hover: popupVisible.userPanel }"
+            :style="{
+              backgroundImage: `url(${`${userInfo.face}`.replace(
+                'http:',
+                '',
+              )})`,
+            }"
+            rounded-full w-40px h-40px
+            shadow="$bew-shadow-2"
+            bg="$bew-fill-3 cover center"
+            z-1
+          />
+          <div
+            ref="avatarShadow"
+            class="avatar-shadow"
+            :class="{ hover: popupVisible.userPanel }"
+            :style="{
+              backgroundImage: `url(${`${userInfo.face}`.replace(
+                'http:',
+                '',
+              )})`,
+            }"
+            pos="absolute top-0" z-0 pointer-events-none
+            bg="cover center" blur-sm
+            rounded-full
+            w-40px h-40px
+          />
+          <Transition name="slide-in">
+            <UserPanelPop
+              v-if="popupVisible.userPanel"
+              :user-info="userInfo"
+              after:h="!0"
+              class="bew-popover"
+            />
+          </Transition>
+        </div>
+
+        <div
+          class="others"
+          :class="{ inactive: rightSideInactive }"
+          style="
+            backdrop-filter: var(--bew-filter-glass-1);
+            box-shadow: var(--bew-shadow-edge-glow-1), var(--bew-shadow-2);
+          "
+          flex h-50px px-6px bg="$bew-elevated"
+          transition="transition-property-colors duration-150"
+          text="$bew-text-1" border="1 $bew-border-color" rounded-full
+          transform-gpu
         >
           <div v-if="!isLogin" class="right-side-item">
             <a href="https://passport.bilibili.com/login" class="login">
-              <ic:outline-account-circle class="text-xl mr-2" />{{
+              <div i-ic:outline-account-circle class="text-xl mr-2" />{{
                 $t('topbar.sign_in')
               }}
             </a>
           </div>
           <template v-if="isLogin">
-            <!-- Avatar -->
-            <div
-              ref="avatar"
-              class="avatar right-side-item"
-            >
-              <a
-                ref="avatarImg"
-                :href="`https://space.bilibili.com/${mid}`"
-                :target="isHomePage() ? '_blank' : '_self'"
-                class="avatar-img"
-                rounded-full
-                z-1
-                w-38px
-                h-38px
-                bg="$bew-fill-3 cover center"
-                :style="{
-                  backgroundImage: `url(${`${userInfo.face}`.replace(
-                    'http:',
-                    '',
-                  )})`,
-                }"
-              />
-              <div
-                ref="avatarShadow"
-                class="avatar-shadow"
-                pos="absolute top-0"
-                bg="cover center"
-                blur-sm
-                opacity="60"
-                rounded-full
-                z-0
-                w-38px
-                h-38px
-                :style="{
-                  backgroundImage: `url(${`${userInfo.face}`.replace(
-                    'http:',
-                    '',
-                  )})`,
-                }"
-              />
-              <Transition name="slide-in">
-                <UserPanelPop
-                  v-if="showUserPanelPop"
-                  :user-info="userInfo"
-                  after:h="!0"
-                  class="bew-popover"
-                />
-              </Transition>
-            </div>
-
             <!-- TODO: need to refactor to this -->
             <!-- <div display="lg:flex none">
               <div v-for="item in topBarItems" :key="item.i18nKey" class="right-side-item">
@@ -485,23 +568,23 @@ defineExpose({
             </div> -->
 
             <!-- TODO: need to refactor to above code -->
-            <div display="lg:flex none" gap-1>
+            <div class="hidden lg:flex" gap-1>
               <!-- Notifications -->
               <div
                 ref="notifications"
                 class="right-side-item"
-                :class="{ active: showNotificationsPop }"
+                :class="{ active: popupVisible.notifications }"
               >
                 <template v-if="unReadMessageCount > 0">
                   <div
                     v-if="settings.topBarIconBadges === 'number'"
-                    class="unread-message"
+                    class="unread-num-dot"
                   >
-                    {{ unReadMessageCount > 999 ? '999+' : unReadMessageCount }}
+                    {{ unReadMessageCount > 99 ? '99+' : unReadMessageCount }}
                   </div>
                   <div
                     v-else-if="settings.topBarIconBadges === 'dot'"
-                    w-8px h-8px bg="$bew-theme-color" rounded-8px pos="absolute right-0 top-0"
+                    class="unread-dot"
                   />
                 </template>
                 <a
@@ -509,12 +592,12 @@ defineExpose({
                   :target="isHomePage() ? '_blank' : '_self'"
                   :title="$t('topbar.notifications')"
                 >
-                  <tabler:bell />
+                  <div i-tabler:bell />
                 </a>
 
                 <Transition name="slide-in">
                   <NotificationsPop
-                    v-if="showNotificationsPop"
+                    v-if="popupVisible.notifications"
                     class="bew-popover"
                   />
                 </Transition>
@@ -524,18 +607,18 @@ defineExpose({
               <div
                 ref="moments"
                 class="right-side-item"
-                :class="{ active: showMomentsPop }"
+                :class="{ active: popupVisible.moments }"
               >
                 <template v-if="newMomentsCount > 0">
                   <div
                     v-if="settings.topBarIconBadges === 'number'"
-                    class="unread-message"
+                    class="unread-num-dot"
                   >
-                    {{ newMomentsCount > 999 ? '999+' : newMomentsCount }}
+                    {{ newMomentsCount > 99 ? '99+' : newMomentsCount }}
                   </div>
                   <div
                     v-else-if="settings.topBarIconBadges === 'dot'"
-                    w-8px h-8px bg="$bew-theme-color" rounded-8px pos="absolute right-0 top-0"
+                    class="unread-dot"
                   />
                 </template>
                 <a
@@ -543,13 +626,11 @@ defineExpose({
                   :target="isHomePage() ? '_blank' : '_self'"
                   :title="$t('topbar.moments')"
                 >
-                  <tabler:windmill />
+                  <div i-tabler:windmill />
                 </a>
 
                 <Transition name="slide-in">
-                  <KeepAlive>
-                    <MomentsPop v-if="showMomentsPop" :key="momentsPopKey" class="bew-popover" />
-                  </KeepAlive>
+                  <MomentsPop v-show="popupVisible.moments" ref="momentsPopRef" class="bew-popover" />
                 </Transition>
               </div>
 
@@ -557,20 +638,20 @@ defineExpose({
               <div
                 ref="favorites"
                 class="right-side-item"
-                :class="{ active: showFavoritesPop }"
+                :class="{ active: popupVisible.favorites }"
               >
                 <a
                   :href="`https://space.bilibili.com/${mid}/favlist`"
                   :target="isHomePage() ? '_blank' : '_self'"
                   :title="$t('topbar.favorites')"
                 >
-                  <mingcute:star-line />
+                  <div i-mingcute:star-line />
                 </a>
 
                 <Transition name="slide-in">
                   <KeepAlive>
                     <FavoritesPop
-                      v-if="showFavoritesPop"
+                      v-if="popupVisible.favorites"
                       ref="favoritesPopRef"
                       class="bew-popover"
                     />
@@ -582,18 +663,18 @@ defineExpose({
               <div
                 ref="history"
                 class="right-side-item"
-                :class="{ active: showHistoryPop }"
+                :class="{ active: popupVisible.history }"
               >
                 <a
                   href="https://www.bilibili.com/account/history"
                   :target="isHomePage() ? '_blank' : '_self'"
                   :title="$t('topbar.history')"
                 >
-                  <mingcute:time-line />
+                  <div i-mingcute:time-line />
                 </a>
 
                 <Transition name="slide-in">
-                  <HistoryPop v-if="showHistoryPop" class="bew-popover" />
+                  <HistoryPop v-if="popupVisible.history" class="bew-popover" />
                 </Transition>
               </div>
 
@@ -601,18 +682,18 @@ defineExpose({
               <div
                 ref="watchLater"
                 class="right-side-item"
-                :class="{ active: showWatchLaterPop }"
+                :class="{ active: popupVisible.watchLater }"
               >
                 <a
                   href="https://www.bilibili.com/watchlater/#/list"
                   :target="isHomePage() ? '_blank' : '_self'"
                   :title="$t('topbar.watch_later')"
                 >
-                  <mingcute:carplay-line />
+                  <div i-mingcute:carplay-line />
                 </a>
 
                 <Transition name="slide-in">
-                  <WatchLaterPop v-if="showWatchLaterPop" class="bew-popover" />
+                  <WatchLaterPop v-if="popupVisible.watchLater" class="bew-popover" ml--30px />
                 </Transition>
               </div>
 
@@ -623,7 +704,7 @@ defineExpose({
                   target="_blank"
                   :title="$t('topbar.creative_center')"
                 >
-                  <mingcute:bulb-line />
+                  <div i-mingcute:bulb-line />
                 </a>
               </div>
             </div>
@@ -631,16 +712,15 @@ defineExpose({
             <!-- More -->
             <div
               ref="more"
-              class="right-side-item"
-              :class="{ active: showMorePop }"
-              display="lg:!none flex"
+              class="right-side-item lg:!hidden flex"
+              :class="{ active: popupVisible.more }"
             >
               <a title="More">
-                <mingcute:menu-line />
+                <div i-mingcute:menu-line />
               </a>
 
               <Transition name="slide-in">
-                <MorePop v-show="showMorePop" class="bew-popover" />
+                <MorePop v-show="popupVisible.more" class="bew-popover" />
               </Transition>
             </div>
 
@@ -652,28 +732,25 @@ defineExpose({
               <a
                 href="https://member.bilibili.com/platform/upload/video/frame"
                 target="_blank"
+                :title="$t('topbar.upload')"
                 bg="$bew-theme-color"
                 rounded-40px
                 un-text="!white !base"
-                m="x-1"
-                flex="~"
-                justify="center"
-                w="xl:100px 42px"
-                h="xl:auto 42px"
-                p="xl:auto x-4"
+                w-35px h-35px ml-1
+                flex="~ justify-center"
                 shadow
                 filter="hover:brightness-110"
                 style="--un-shadow: 0 0 10px var(--bew-theme-color-60)"
               >
-                <mingcute:upload-2-line flex-shrink-0 />
-                <span m="l-2" display="xl:block none">{{
+                <div i-mingcute:upload-2-line flex-shrink-0 />
+                <!-- <span m="l-2" class="hidden xl:block">{{
                   $t('topbar.upload')
-                }}</span>
+                }}</span> -->
               </a>
 
               <Transition name="slide-in">
                 <UploadPop
-                  v-if="showUploadPop"
+                  v-if="popupVisible.upload"
                   class="bew-popover"
                   pos="!left-auto !right-0"
                   transform="!translate-x-0"
@@ -690,32 +767,32 @@ defineExpose({
 <style lang="scss" scoped>
 .slide-in-enter-active,
 .slide-in-leave-active {
-  --at-apply: transition-all duration-300 pointer-events-none transform-gpu;
+  --uno: "transition-all duration-300 pointer-events-none transform-gpu";
 }
 
 .slide-in-leave-to,
 .slide-in-enter-from {
-  --at-apply: transform important:translate-y-4 opacity-0;
+  --uno: "transform important: translate-y-4 opacity-0";
 }
 
 .slide-out-enter-active,
 .slide-out-leave-active {
-  --at-apply: transition-all duration-300 pointer-events-none transform-gpu;
+  --uno: "transition-all duration-300 pointer-events-none transform-gpu";
 }
 
 .slide-out-leave-to,
 .slide-out-enter-from {
-  --at-apply: transform important:-translate-y-4 opacity-0;
+  --uno: "transform important: -translate-y-4 opacity-0";
 }
 
 .fade-enter-active,
 .fade-leave-active {
-  --at-apply: transition-all duration-600;
+  --uno: "transition-all duration-600";
 }
 
 .fade-leave-to,
 .fade-enter-from {
-  --at-apply: opacity-0;
+  --uno: "opacity-0";
 }
 
 .hide {
@@ -723,73 +800,81 @@ defineExpose({
 }
 
 .bew-popover {
-  --at-apply: absolute top-60px left-1/2
-    transform -translate-x-1/2
-    overflow-visible
-    after:content-empty
-    after:opacity-100 after:w-full after:h-100px
-    after:absolute after:-top-30px after:left-1/2 after:-z-1
-    after:transform after:-translate-x-1/2;
+  --uno: "absolute top-60px left-1/2";
+  --uno: "transform -translate-x-1/2";
+  --uno: "overflow-visible";
+  --uno: "after:content-empty";
+  --uno: "after:opacity-100 after:w-full after:h-100px";
+  --uno: "after:absolute after:top--30px after:left-1/2 after:-z-1";
+  --uno: "after:transform after:-translate-x-1/2";
 }
 
 .logo.activated {
-  --at-apply: bg-$bew-theme-color dark:bg-white;
+  --uno: "bg-$bew-theme-color dark:bg-white translate-x-[calc(var(--bew-base-font-size))] shadow-$bew-shadow-2";
 
   svg {
-    --at-apply: fill-white dark:fill-$bew-theme-color;
+    --uno: "fill-white dark:fill-$bew-theme-color";
   }
 }
 
 .right-side {
+  .avatar {
+    --uno: "flex items-center mr-4 relative z-1";
 
-  .unread-message {
-    --at-apply: absolute -top-1 right-0
-      important:px-1 important:py-2 rounded-full
-      text-xs leading-0 z-1 min-w-16px h-16px
-      flex justify-center items-center
-      bg-$bew-theme-color  text-white;
+    .avatar-img,
+    .avatar-shadow {
+      --uno: "duration-300";
+
+      &.hover {
+        --uno: "transform scale-230 translate-y-36px";
+      }
+    }
+
+    .avatar-shadow {
+      --uno: "opacity-0";
+
+      &.hover {
+        --uno: "opacity-60";
+      }
+    }
+  }
+
+  .others.inactive,
+  .others:hover {
+    --uno: "important-backdrop-filter-none important-bg-$bew-elevated-solid";
+  }
+
+  .unread-num-dot {
+    --uno: "absolute top-4px right--4px";
+    --uno: "important:px-1 important:py-2 rounded-full";
+    --uno: "text-xs leading-0 z-3 min-w-14px h-14px";
+    --uno: "flex justify-center items-center";
+    --uno: "bg-$bew-theme-color  text-white";
     box-shadow: 0 2px 4px rgba(var(--tw-shadow-color), 0.4);
   }
 
+  .unread-dot {
+    --uno: "w-8px h-8px bg-$bew-theme-color rounded-8px absolute right-0 top-4px";
+  }
+
   .right-side-item {
-    --at-apply: relative text-$bew-text-1 flex items-center;
+    --uno: "relative text-$bew-text-1 flex items-center";
 
     &:not(.avatar) a {
-      --at-apply:text-xl flex items-center p-2 rounded-40px
-        duration-300;
+      --uno: "text-xl flex items-center p-2 rounded-40px duration-300 relative z-5";
+      --uno: "h-35px h-35px";
     }
 
-    &.active a, &:not(.upload) a:hover {
+    &.active a,
+    &:not(.upload) a:hover {
       --un-drop-shadow: drop-shadow(0 0 6px white);
-      --at-apply: bg-$bew-fill-2;
+      --uno: "bg-$bew-fill-2 shadow-[var(--bew-shadow-edge-glow-1),var(--bew-shadow-1)]";
     }
   }
 
   .right-side-item .login {
     --un-drop-shadow: drop-shadow(0 0 6px var(--bew-theme-color));
-    --at-apply: rounded-full mx-1
-      important:text-$bew-theme-color important:px-4
-      hover:important-bg-$bew-theme-color hover:important-text-white
-      flex items-center justify-center important:text-base w-120px
-      border-solid border-$bew-theme-color border-2
-      important:dark:filter;
-  }
-
-  .avatar {
-    --at-apply: flex items-center ml-2px pr-2 relative z-1;
-
-    .avatar-img,
-    .avatar-shadow {
-      --at-apply: duration-300;
-
-      &.hover {
-        --at-apply: transform scale-230 important:translate-y-36px;
-      }
-    }
-
-    .avatar-shadow {
-      --at-apply: pointer-events-none;
-    }
+    --uno: "rounded-full mx-1 important:text-$bew-theme-color important:px-4 hover:important-bg-$bew-theme-color hover:important-text-white flex items-center justify-center important:text-base w-120px border-solid border-$bew-theme-color border-2 important:dark:filter";
   }
 }
 </style>

@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import type { RankingType } from '../types'
-import type { RankingResult, List as RankingVideoItem } from '~/models/video/ranking'
-import type { List as RankingPgcItem, RankingPgcResult } from '~/models/video/rankingPgc'
+
+import BangumiCard from '~/components/BangumiCard/BangumiCard.vue'
+import BangumiCardSkeleton from '~/components/BangumiCard/BangumiCardSkeleton.vue'
+import OverlayScrollbarsComponent from '~/components/OverlayScrollbarsComponent'
+import VideoCard from '~/components/VideoCard/VideoCard.vue'
+import VideoCardSkeleton from '~/components/VideoCard/VideoCardSkeleton.vue'
+import { useApiClient } from '~/composables/api'
+import { useBewlyApp } from '~/composables/useAppProvider'
 import type { GridLayout } from '~/logic'
 import { settings } from '~/logic'
+import type { List as RankingVideoItem, RankingResult } from '~/models/video/ranking'
+import type { List as RankingPgcItem, RankingPgcResult } from '~/models/video/rankingPgc'
 import emitter from '~/utils/mitt'
-import API from '~/background/msg.define'
+
+import type { RankingType } from '../types'
 
 const props = defineProps<{
   gridLayout: GridLayout
@@ -18,6 +26,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const api = useApiClient()
 const { handleBackToTop, handlePageRefresh } = useBewlyApp()
 
 const gridValue = computed((): string => {
@@ -129,8 +138,7 @@ function getRankingVideos() {
   videoList.length = 0
   emit('beforeLoading')
   isLoading.value = true
-  browser.runtime.sendMessage({
-    contentScriptQuery: API.RANKING.GET_RANKING_VIDEOS,
+  api.ranking.getRankingVideos({
     rid: activatedRankingType.value.rid,
     type: 'type' in activatedRankingType.value ? activatedRankingType.value.type : 'all',
   }).then((response: RankingResult) => {
@@ -147,12 +155,11 @@ function getRankingVideos() {
 function getRankingPgc() {
   PgcList.length = 0
   isLoading.value = true
-  browser.runtime.sendMessage({
-    contentScriptQuery: API.RANKING.GET_RANKING_PGC,
+  api.ranking.getRankingPgc({
     season_type: activatedRankingType.value.seasonType,
   }).then((response: RankingPgcResult) => {
     if (response.code === 0)
-      Object.assign(PgcList, response.result.list)
+      Object.assign(PgcList, response.data.list)
   }).finally(() => isLoading.value = false)
 }
 
@@ -191,41 +198,48 @@ defineExpose({ initData })
       <template v-if="!('seasonType' in activatedRankingType)">
         <VideoCard
           v-for="(video, index) in videoList"
-          :id="Number(video.aid)"
           :key="video.aid"
-          :duration="video.duration"
-          :title="video.title"
-          :desc="video.desc"
-          :cover="video.pic"
-          :author="video.owner.name"
-          :author-face="video.owner.face"
-          :mid="video.owner.mid"
-          :view="video.stat.view"
-          :danmaku="video.stat.danmaku"
-          :published-timestamp="video.pubdate"
-          :bvid="video.bvid"
-          :rank="index + 1"
-          :cid="video.cid"
+          :video="{
+            id: Number(video.aid),
+            duration: video.duration,
+            title: video.title,
+            desc: video.desc,
+            cover: video.pic,
+            author: video.owner.name,
+            authorFace: video.owner.face,
+            mid: video.owner.mid,
+            view: video.stat.view,
+            danmaku: video.stat.danmaku,
+            publishedTimestamp: video.pubdate,
+            bvid: video.bvid,
+            rank: index + 1,
+            cid: video.cid,
+          }"
           show-preview
           :horizontal="gridLayout !== 'adaptive'"
-
           w-full
         />
       </template>
       <template v-else>
-        <LongCoverCard
+        <BangumiCard
           v-for="pgc in PgcList"
           :key="pgc.url"
-          :url="pgc.url"
-          :cover="pgc.cover"
-          :title="pgc.title"
-          :desc="pgc.new_ep.index_show"
-          :view="pgc.stat.view"
-          :follow="pgc.stat.follow"
-          :rank="pgc.rank"
-          :capsule-text="pgc.rating.replace('分', '')"
+          :bangumi="{
+            url: pgc.url,
+            cover: pgc.cover,
+            title: pgc.title,
+            desc: pgc.new_ep.index_show,
+            view: pgc.stat.view,
+            follow: pgc.stat.follow,
+            rank: pgc.rank,
+            capsuleText: pgc.rating.replace('分', ''),
+            badge: {
+              text: pgc.badge_info.text || '',
+              bgColor: pgc.badge_info.bg_color || '',
+              bgColorDark: pgc.badge_info.bg_color_night || '',
+            },
+          }"
           :horizontal="gridLayout !== 'adaptive'"
-          mb-8
         />
       </template>
 
@@ -238,7 +252,7 @@ defineExpose({ initData })
           />
         </template>
         <template v-else>
-          <LongCoverCardSkeleton
+          <BangumiCardSkeleton
             v-for="item in 30" :key="item"
             :horizontal="gridLayout !== 'adaptive'"
           />
@@ -250,10 +264,10 @@ defineExpose({ initData })
 
 <style lang="scss" scoped>
 .active {
-  --at-apply: scale-110 bg-$bew-theme-color-auto text-$bew-text-auto shadow-$bew-shadow-2;
+  --uno: "scale-110 bg-$bew-theme-color-auto text-$bew-text-auto shadow-$bew-shadow-2";
 }
 
 .hide {
-  --at-apply: h-[calc(100vh-70)] translate-y--70px;
+  --uno: "h-[calc(100vh-70)] translate-y--70px";
 }
 </style>

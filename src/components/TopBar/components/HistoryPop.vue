@@ -1,18 +1,21 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
-import type { Ref } from 'vue'
-import { onMounted, reactive, ref, watch } from 'vue'
 import { useDateFormat } from '@vueuse/core'
-import type { HistoryItem } from '../types'
-import { HistoryType } from '../types'
-import { isHomePage, removeHttpFromUrl, smoothScrollToTop } from '~/utils/main'
+import type { Ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+import Empty from '~/components/Empty.vue'
+import Loading from '~/components/Loading.vue'
+import Progress from '~/components/Progress.vue'
+import { useApiClient } from '~/composables/api'
+import type { HistoryResult, List as HistoryItem } from '~/models/history/history'
+import { Business } from '~/models/history/history'
 import { calcCurrentTime } from '~/utils/dataFormatter'
-import API from '~/background/msg.define'
+import { isHomePage, removeHttpFromUrl, scrollToTop } from '~/utils/main'
 
 const { t } = useI18n()
-
+const api = useApiClient()
 const historys = reactive<Array<HistoryItem>>([])
-const historyTabs = reactive([
+const historyTabs = computed(() => [
   {
     id: 0,
     name: t('topbar.moments_dropdown.tabs.videos'),
@@ -39,29 +42,27 @@ const noMoreContent = ref<boolean>(false)
 const livePage = ref<number>(1)
 const historysWrap = ref<HTMLElement>() as Ref<HTMLElement>
 
-watch(activatedTab, (newVal: number, oldVal: number) => {
+watch(activatedTab, (newVal: number | undefined, oldVal: number | undefined) => {
   if (newVal === oldVal)
     return
 
   historys.length = 0
   if (historysWrap.value)
-    smoothScrollToTop(historysWrap.value, 300)
+    scrollToTop(historysWrap.value)
 
   if (newVal === 0) {
-    getHistoryList(HistoryType.Archive)
+    getHistoryList(Business.ARCHIVE)
   }
   else if (newVal === 1) {
     livePage.value = 1
-    getHistoryList(HistoryType.Live)
+    getHistoryList(Business.LIVE)
   }
   else if (newVal === 2) {
-    getHistoryList(HistoryType.Article)
+    getHistoryList(Business.ARTICLE)
   }
-})
+}, { immediate: true })
 
 onMounted(() => {
-  getHistoryList(HistoryType.Archive)
-
   if (historysWrap.value) {
     historysWrap.value.addEventListener('scroll', () => {
       // When you scroll to the bottom, they will automatically
@@ -74,19 +75,19 @@ onMounted(() => {
       ) {
         if (activatedTab.value === 0 && !noMoreContent.value) {
           getHistoryList(
-            HistoryType.Archive,
+            Business.ARCHIVE,
             historys[historys.length - 1].view_at,
           )
         }
         else if (activatedTab.value === 1 && !noMoreContent.value) {
           getHistoryList(
-            HistoryType.Live,
+            Business.LIVE,
             historys[historys.length - 1].view_at,
           )
         }
         else if (activatedTab.value === 2 && !noMoreContent.value) {
           getHistoryList(
-            HistoryType.Article,
+            Business.ARTICLE,
             historys[historys.length - 1].view_at,
           )
         }
@@ -101,7 +102,7 @@ function onClickTab(tabId: number) {
     return
 
   activatedTab.value = tabId
-  historyTabs.forEach((tab) => {
+  historyTabs.value.forEach((tab) => {
     tab.isSelected = tab.id === tabId
   })
 }
@@ -112,43 +113,41 @@ function onClickTab(tabId: number) {
  * @return {string} url
  */
 function getHistoryUrl(item: HistoryItem) {
+  if (item.uri)
+    return item.uri
+
   // Video
-  if (activatedTab.value === 0) {
-    if (item.history.business === HistoryType.PGC)
-      return removeHttpFromUrl(item.uri)
-    if (item.history.business === HistoryType.Archive && item?.videos && item.videos > 0)
+  if (item.history.business === Business.ARCHIVE) {
+    if (item?.videos && item.videos > 0)
       return `//www.bilibili.com/video/${item.history.bvid}?p=${item.history.page}`
     return `//www.bilibili.com/video/${item.history.bvid}`
   }
   // Live
-  else if (activatedTab.value === 1) {
+  else if (item.history.business === Business.LIVE) {
     return `//live.bilibili.com/${item.history.oid}`
   }
   // Article
-  else if (activatedTab.value === 2) {
+  else if (item.history.business === Business.ARTICLE || item.history.business === Business.ARTICLE_LIST) {
     if (item.history.cid === 0)
       return `//www.bilibili.com/read/cv${item.history.oid}`
     else
       return `//www.bilibili.com/read/cv${item.history.cid}`
   }
-
   return ''
 }
 
 /**
  * Get history list
- * @param {HistoryType} type
- * @param {number} view_at Last viewed timestamp
+ * @param type
+ * @param view_at Last viewed timestamp
  */
-function getHistoryList(type: HistoryType, view_at = 0 as number) {
+function getHistoryList(type: Business, view_at = 0 as number) {
   isLoading.value = true
-  browser.runtime
-    .sendMessage({
-      contentScriptQuery: API.HISTORY.GET_HISTORY_LIST,
-      type,
-      view_at,
-    })
-    .then((res) => {
+  api.history.getHistoryList({
+    type,
+    view_at,
+  })
+    .then((res: HistoryResult) => {
       if (res.code === 0) {
         if (Array.isArray(res.data.list) && res.data.list.length > 0)
           historys.push(...res.data.list)
@@ -168,11 +167,13 @@ function getHistoryList(type: HistoryType, view_at = 0 as number) {
 
 <template>
   <div
-    bg="$bew-elevated-solid-1"
+    style="backdrop-filter: var(--bew-filter-glass-1);"
+    bg="$bew-elevated"
     w="380px"
     rounded="$bew-radius"
     pos="relative"
-    style="box-shadow: var(--bew-shadow-2)"
+    shadow="[var(--bew-shadow-edge-glow-1),var(--bew-shadow-3)]"
+    border="1 $bew-border-color"
   >
     <!-- top bar -->
     <header
@@ -182,7 +183,7 @@ function getHistoryList(type: HistoryType, view_at = 0 as number) {
       p="y-4 x-6"
       pos="fixed top-0 left-0"
       w="full"
-      bg="$bew-elevated-1"
+      bg="$bew-elevated"
       z="2"
       border="!rounded-t-$bew-radius"
     >
@@ -221,17 +222,17 @@ function getHistoryList(type: HistoryType, view_at = 0 as number) {
         <Loading
           v-if="isLoading && historys.length === 0"
           h="full"
-          flex="~"
-          items="center"
+          flex="~ items-center"
         />
 
         <!-- empty -->
         <Empty
           v-if="!isLoading && historys.length === 0"
           pos="absolute top-0 left-0"
-          bg="$bew-content-1"
+          bg="$bew-content"
           z="0" w="full" h="full"
           flex="~ items-center"
+          rounded="$bew-radius"
         />
 
         <!-- historys -->
@@ -325,7 +326,7 @@ function getHistoryList(type: HistoryType, view_at = 0 as number) {
                       m="1"
                       rounded="$bew-radius-half"
                     >
-                      Offline
+                      OFFLINE
                     </div>
                   </div>
                 </template>
@@ -366,8 +367,8 @@ function getHistoryList(type: HistoryType, view_at = 0 as number) {
                     items-center
                     gap-1
                     m="l-2"
-                  ><tabler:live-photo />
-                    Live
+                  ><div i-tabler:live-photo />
+                    LIVE
                   </span>
                 </div>
                 <p text="$bew-text-2 sm">
@@ -385,7 +386,7 @@ function getHistoryList(type: HistoryType, view_at = 0 as number) {
 
         <!-- loading -->
         <Transition name="fade">
-          <loading v-if="isLoading && historys.length !== 0" m="-t-4" />
+          <Loading v-if="isLoading && historys.length !== 0" m="-t-4" />
         </Transition>
       </div>
     </main>
@@ -394,20 +395,20 @@ function getHistoryList(type: HistoryType, view_at = 0 as number) {
 
 <style lang="scss" scoped>
 .tab {
-  --at-apply: relative text-$bew-text-2;
+  --uno: "relative text-$bew-text-2";
 
   &::after {
-    --at-apply: absolute bottom-0 left-0 w-full h-12px bg-$bew-theme-color
-      opacity-0 transform scale-x-0 -z-1 transition-all duration-300;
-    content: '';
+    --uno: "absolute bottom-0 left-0 w-full h-12px bg-$bew-theme-color opacity-0 transform scale-x-0 -z-1";
+    --uno: "transition-all duration-300";
+    content: "";
   }
 }
 
 .tab-selected {
-  --at-apply: font-bold text-$bew-text-1;
+  --uno: "font-bold text-$bew-text-1";
 
   &::after {
-    --at-apply: scale-x-80 opacity-40;
+    --uno: "scale-x-80 opacity-40";
   }
 }
 </style>

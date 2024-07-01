@@ -1,19 +1,25 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue'
 import { onKeyStroke } from '@vueuse/core'
 
+import Button from '~/components/Button.vue'
+import { useBewlyApp } from '~/composables/useAppProvider'
+
 const props = withDefaults(defineProps<{
-  title: string
+  title?: string
   desc?: string
   center?: boolean
+  frostedGlass?: boolean
   appendToBewlyBody?: boolean
   width?: string | number
-  height?: string | number
+  maxWidth?: string | number
+  contentHeight?: string | number
+  contentMaxHeight?: string | number
   centerFooter?: boolean
   loading?: boolean
   preventCloseWhenLoading?: boolean
 }>(), {
   preventCloseWhenLoading: true,
+  frostedGlass: true,
 })
 
 const emit = defineEmits(['close', 'confirm'])
@@ -37,8 +43,14 @@ const showDialog = ref<boolean>(false)
 const dialogWidth = computed(() => {
   return typeof props.width === 'number' ? `${props.width}px` : props.width || '400px'
 })
-const dialogHeight = computed(() => {
-  return typeof props.height === 'number' ? `${props.height}px` : props.height || 'auto'
+const dialogMaxWidth = computed(() => {
+  return typeof props.maxWidth === 'number' ? `${props.maxWidth}px` : props.maxWidth || '400px'
+})
+const dialogContentHeight = computed(() => {
+  return typeof props.contentHeight === 'number' ? `${props.contentHeight}px` : props.contentHeight || 'auto'
+})
+const dialogContentMaxHeight = computed(() => {
+  return typeof props.contentMaxHeight === 'number' ? `${props.contentMaxHeight}px` : props.contentMaxHeight || 'auto'
 })
 
 onKeyStroke('Alt', (e: KeyboardEvent) => {
@@ -81,7 +93,8 @@ function handleConfirm() {
       <div
         v-if="showDialog"
         class="dialog"
-        pos="fixed top-0 left-0" w-full h-full z-100
+        pos="fixed top-0 left-0" w-full h-full z-100 z-10002
+        transform-gpu
       >
         <div
           bg="black opacity-40 dark:opacity-40"
@@ -90,11 +103,15 @@ function handleConfirm() {
         />
         <div
           style="
-            box-shadow: var(--bew-shadow-3) var(--bew-shadow-edge-glow-2);
-            backdrop-filter: var(--bew-filter-glass-2);
+            box-shadow: var(--bew-shadow-3), var(--bew-shadow-edge-glow-2);
           "
-          :style="{ width: dialogWidth, height: dialogHeight }"
-          pos="absolute top-1/2 left-1/2" bg="$bew-elevated-1" rounded="$bew-radius"
+          :style="{
+            width: dialogWidth,
+            maxWidth: dialogMaxWidth,
+            backdropFilter: frostedGlass ? 'var(--bew-filter-glass-2)' : 'none',
+            backgroundColor: frostedGlass ? 'var(--bew-elevated)' : 'var(--bew-elevated-solid)',
+          }"
+          pos="absolute top-1/2 left-1/2" rounded="$bew-radius" border="1 $bew-border-color"
           transform="translate--1/2" z-2 overflow="x-hidden y-overlay"
           antialiased
         >
@@ -105,13 +122,13 @@ function handleConfirm() {
               pos="absolute top-0 left-0" w-full h-full bg="white dark:black opacity-60 dark:opacity-60" flex="~ justify-center items-center"
               z-2
             >
-              <Icon icon="svg-spinners:ring-resize" text="4xl" />
+              <div i-svg-spinners-ring-resize text="4xl" />
             </div>
           </Transition>
 
           <header
             style="
-              text-shadow: 0 0 15px var(--bew-elevated-solid-1), 0 0 20px var(--bew-elevated-solid-1)
+              text-shadow: 0 0 15px var(--bew-elevated-solid), 0 0 20px var(--bew-elevated-solid)
             "
             pos="sticky top-0 left-0" w-full h-70px px-8 flex
             items-center justify-between
@@ -121,9 +138,11 @@ function handleConfirm() {
               :style="{ textAlign: center ? 'center' : 'left' }"
               w-full
             >
-              <p text-xl fw-bold>
-                {{ title }}
-              </p>
+              <slot name="title">
+                <p text-xl fw-bold>
+                  {{ title }}
+                </p>
+              </slot>
               <p text="sm $bew-text-2">
                 <slot name="desc">
                   {{ desc }}
@@ -132,16 +151,26 @@ function handleConfirm() {
             </div>
 
             <div
-              style="backdrop-filter: var(--bew-filter-glass-1)"
-              text-2xl leading-0 bg="$bew-fill-1 hover:$bew-theme-color-30" w="32px" h="32px"
-              ml-8 p="1" rounded-8 cursor="pointer"
-              hover:ring="2 $bew-theme-color" hover:text="$bew-theme-color" duration-300
+              style="
+                backdrop-filter: var(--bew-filter-glass-1);
+                box-shadow: var(--bew-shadow-edge-glow-1), var(--bew-shadow-1);
+              "
+              text="!16px hover:$bew-theme-color" w="32px" h="32px"
+              flex="~ items-center justify-center shrink-0"
+              bg="$bew-fill-1 hover:$bew-theme-color-30"
+              ml-8 rounded-8 cursor="pointer" border="1 $bew-border-color"
+              box-border
+              duration-300
               @click="handleClose"
             >
-              <ic-baseline-clear />
+              <div i-ic-baseline-clear />
             </div>
           </header>
-          <main p="x-8 y-2" relative>
+
+          <main
+            :style="{ height: dialogContentHeight, maxHeight: dialogContentMaxHeight }"
+            p="x-8 y-2" relative overflow-scroll
+          >
             <!-- <div h-80px mt--8 /> -->
             <slot />
           </main>
